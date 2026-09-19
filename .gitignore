@@ -1,0 +1,51 @@
+# =============================================================================
+# NYTAS-PARKINSON — Git Yoksayma (.gitignore)
+# =============================================================================
+
+# Python Derleme ve Önbellek Dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Sanal Ortamlar (Virtual Environments)
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Video Kayıtları (KVKK / Hasta Gizliliği ve GitHub Boyut Sınırları)
+# Canlı seanslarda kaydedilen ham video dosyaları repoya eklenmez
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# Seans ve Sistem Günlükleri (Log Dosyaları)
+*.log
+seans_*.log
+
+# Yedekleme ve Geçici Dosyalar
+*_yedek.*
+*.tmp
+*.bak
+*.swp
+.~lock.*#
+~$*
+
+# IDE ve Kod Editörü Dosyaları
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# İşletim Sistemi Kalıntıları
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Yerel Ortam Değişkenleri (Şablon için .env.example kullanılır)
+.env

@@ -1,0 +1,48 @@
+========================================================================================
+             NYTAS-PARKINSON™ — PROJE VE KLASÖR REHBERİ (NE NEREDE?)
+========================================================================================
+
+Sayın Araştırmacı / Kullanıcı,
+Bu projeyi kurcalarken neyin nerede olduğunu kolayca anlamanız için tüm klasörler
+Türkçe olarak düzenlenmiş ve aşağıda özetlenmiştir:
+
+📁 1. calistirma_betikleri/ (Eski adı: scripts)
+   • Programı tek tıkla çalıştırmanızı sağlayan .bat dosyaları buradadır.
+   • 'run_nytas.bat'   -> Canlı yürüyüş analizi kamerasını doğrudan açar.
+   • 'train_model.bat' -> Makine öğrenmesi modelini yeniden eğitir.
+   • 'setup_env.bat'   -> Gerekli Python kütüphanelerini otomatik kurar.
+
+📁 2. dokumanlar/ (Eski adı: docs)
+   • TÜBİTAK 1002 proje başvuru formu, proje metinleri ve akademik dokümanlar buradadır.
+   • 'YOL_HARITASI_VE_PROTOTIP_PLANI.md' -> Projenin gelecek vizyonu, Faz planları ve prototip yol haritası.
+
+📁 3. modeller/ (Eski adı: models)
+   • Yapay zeka ve makine öğrenmesi modelleri burada saklanır.
+   • 'pose_landmarker.task' -> Google MediaPipe vücut/iskelet (33 eklem) algılama modeli.
+   • 'parkinson_model.pkl'   -> Eğitilmiş ve canlı testlerde karar veren Random Forest modeli.
+
+📁 4. veriler/ (Eski adı: data)
+   • Sistemin kullandığı ve seanslardan topladığı veriler buradadır.
+   • 'veriler/raw/' -> İlk eğitim için kullanılan normal ve Parkinson hasta veri setleri (.csv).
+   • 'veriler/processed/nytas_parkinson_veri/' -> Canlı kamera testlerinde kaydettiğiniz seanslar
+     (video kayıtları, seans logları ve 'parkinson_master.csv' birleşik veri tablosu).
+
+📁 5. kaynak_kodlar/ (Eski adı: src)
+   • Sistemin çalışan ana Python kodları buradadır.
+   • 'nytas_parkinson.py'        -> Kamera açan, vücut iskeletini takip eden, 8 biyobelirteci
+                                   hesaplayan ve ekranda grafik/rapor sunan ana program.
+   • 'model_egitim_parkinson.py' -> Parkinson tespit modelini eğiten, test eden ve doğruluk
+                                   grafikleri oluşturan kod.
+
+📁 6. ayarlar/ (Eski adı: config)
+   • 'settings.py' dosyası buradadır. Sistemdeki tüm klasörlerin ve modellerin yollarını tanımlar.
+
+----------------------------------------------------------------------------------------
+📄 KÖK DİZİNDEKİ ÖNEMLİ DOSYALAR:
+----------------------------------------------------------------------------------------
+• '1_UYGULAMAYI_BASLAT.bat' : Çift tıklayarak ana yönetim panelini (GUI) başlatabileceğiniz kısayol.
+• 'main.py'                : Ana yönetim paneli (Canlı test, model eğitimi ve dosya sağlığını
+                              grafik arayüzden yönetmenizi sağlar).
+• 'requirements.txt'       : Proje için gerekli Python kütüphaneleri listesi.
+• 'README.md'              : Detaylı teknik kılavuz ve proje mimarisi.
+========================================================================================

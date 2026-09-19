@@ -1,0 +1,4 @@
+BU KLASÖR HAKKINDA: DOKÜMANLAR (Eski adıyla "docs")
+==================================================
+Bu klasörde TÜBİTAK 1002 Hızlı Destek Programı başvuru formları, proje metinleri,
+akademik referanslar, gelecek yol haritası (YOL_HARITASI_VE_PROTOTIP_PLANI.md) ve proje belgeleri yer alır.

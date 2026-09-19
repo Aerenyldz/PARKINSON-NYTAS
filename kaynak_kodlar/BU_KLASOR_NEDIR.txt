@@ -1,0 +1,12 @@
+BU KLASÖR HAKKINDA: KAYNAK KODLAR (Eski adıyla "src")
+=====================================================
+Bu klasörde NYTAS-PARKINSON projesinin ana yazılım kodları yer alır:
+1. nytas_parkinson.py:
+   - Kamerayı açan veya video dosyasını okuyan ana modüldür.
+   - MediaPipe ile 33 vücut eklemini (iskelet) anlık takip eder.
+   - 8 biyobelirteci (kol salınımı, asimetri, adım uzunluğu, donma, tremor vb.) hesaplar.
+   - Canlı ekranda görselleştirir ve seansı kaydeder.
+
+2. model_egitim_parkinson.py:
+   - Verileri kullanarak Random Forest / Gradient Boosting makine öğrenmesi modellerini eğitir.
+   - Doğruluk (Accuracy, AUC, F1) skorlarını ve karışıklık matrisini çıkarır.

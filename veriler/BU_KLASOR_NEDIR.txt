@@ -1,0 +1,8 @@
+BU KLASÖR HAKKINDA: VERİLER (Eski adıyla "data")
+================================================
+Bu klasörde model eğitimi ve canlı seanslardan toplanan veriler saklanır:
+1. raw/ :
+   - Referans eğitim veri setleri bulunur (dataset_normal_parkinson.csv ve dataset_parkinson_parkinson.csv).
+2. processed/nytas_parkinson_veri/ :
+   - Kamera ile yaptığınız her ölçüm/seans (seans_001, seans_002 vb.) buraya kaydedilir.
+   - İçerisinde hastanın seans video kaydı, ölçüm logları ve tüm seansların birleştirildiği 'parkinson_master.csv' dosyası yer alır.

@@ -1,0 +1,5 @@
+BU KLASÖR HAKKINDA: AYARLAR (Eski adıyla "config")
+==================================================
+Bu klasörde sistemin dosya yollarını (hangi klasör nerede, modeller hangi adreste)
+ve konfigürasyon değişkenlerini yöneten 'settings.py' dosyası yer alır.
+Normal kullanımda bu klasörü değiştirmeniz gerekmez.

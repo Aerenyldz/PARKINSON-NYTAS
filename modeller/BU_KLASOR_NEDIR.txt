@@ -1,0 +1,10 @@
+BU KLASÖR HAKKINDA: YAPAY ZEKA MODELLERİ (Eski adıyla "models")
+==============================================================
+Bu klasörde sistemin kullandığı yapay zeka modelleri yer alır:
+1. pose_landmarker.task:
+   - Google MediaPipe Pose Landmarker model dosyasıdır (~5.7 MB).
+   - Kamera görüntüsünden insan iskeletini ve 33 anatomik eklem noktasını çıkarır.
+
+2. parkinson_model.pkl:
+   - Eğitilmiş makine öğrenmesi modelidir.
+   - Ölçülen 8 biyobelirteç değerine bakarak Parkinson riski olasılığını hesaplar.
