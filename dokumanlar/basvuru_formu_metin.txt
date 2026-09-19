@@ -1,0 +1,533 @@
+                                                                                                     
+
+1002 - HIZLI DESTEK PROGRAMI                                                                                                                       1002-A HIZLI DESTEK MODÜLÜ
+
+ PROJE BAŞVURU FORMU
+
+Proje Başlığı: Parkinson Hastalığına Özgü Dijital Biyobelirteçlerin İşaretleyicisiz Kamera Tabanlı Bilgisayarlı Görü ve Makine Öğrenmesi ile Gerçek Zamanlı Tespiti: NYTAS-Parkinson Sistemi
+
+Proje Yürütücüsü: Mahyar Teymournezhad
+
+Projenin Yürütüleceği Kurum/Kuruluş: Biruni Üniversitesi, Mühendislik ve Doğa Bilimleri Fakültesi, Bilgisayar Mühendisliği Bölümü
+
+1. BİLİMSEL NİTELİK
+
+Konunun Önemi ve Projenin Bilimsel Niteliği
+
+Proje önerisinde ele alınan konunun kapsamı, sınırları ve önemi ortaya konulur. Proje kapsamında yapılacak çalışmalarla literatürdeki hangi eksikliğin nasıl giderileceği veya hangi soruna nasıl bir çözüm getirileceği ilgili literatüre atıfla açıklanarak projenin bilimsel niteliği ortaya konulur. Projenin araştırma sorusu ve varsa hipotez(ler)i tanımlanır. Kaynaklar https://tubitak.gov.tr/tr/duyuru/bibliyografik-verilerin-duzenlenmesi sayfasındaki açıklamalara uygun olarak EK-1’de verilir.
+
+Parkinson hastalığı (PH), Alzheimer'dan sonra en yaygın ikinci nörodejeneratif bozukluk olup, bazal gangliadaki dopaminerjik nöron kaybıyla karakterize edilmektedir [1]. Hastalık, istirahat tremoru (4-6 Hz), rijidite, bradikinezi ve postural instabilite gibi temel motor semptomlarla kendini göstermektedir [2]. Bu semptomlar arasında yürüyüş bozuklukları hastaların yaşam kalitesini en fazla etkileyen faktörlerin başında gelmektedir. Özellikle "Donma Fenomeni" (Freezing of Gait - FOG), hastaların ilerleme niyetlerine rağmen ayaklarının yere yapışmış hissetmesiyle karakterize edilen ve düşme riskini dramatik şekilde artıran bir epizodik motor semptomdur [3].
+
+Klinik pratikte yürüyüş değerlendirmesi büyük ölçüde uzman nörologların sübjektif MDS-UPDRS gözlemlerine dayanmaktadır [4]. Objektif ölçüm yapabilen altın standart sistemler (Vicon, Qualisys, GAITRite) ise 500.000 TL ve üzeri maliyetleri, marker gereklilikleri ve yalnızca özel laboratuvarlarda kullanılabilmeleri nedeniyle erişilebilirlik sorunu yaratmaktadır [5]. Bu bağlamda, laboratuvar dışı ortamlarda da uygulanabilecek, işaretleyicisiz (markerless), düşük maliyetli ve nesnel "dijital biyobelirteç" sistemlerinin geliştirilmesi modern sağlık ekosisteminin en kritik hedeflerinden biri haline gelmiştir [6].
+
+Mevcut literatürde çoğu markerless çalışma yalnızca alt ekstremite kinematik parametrelerine (diz açısı, adım uzunluğu) odaklanmaktadır [7]. Ancak Parkinson'un yürüyüşe özgü motor belirtileri sadece bacakla sınırlı olmayıp, üst ekstremite (kol salınımı asimetrisi), gövde (kamptokormia) ve frekans düzeyinde (tremor, FOG) de kendini göstermektedir [8,9]. Bu parametreleri eşzamanlı ve entegre biçimde ölçebilen tek kamera tabanlı bir sistem literatürde bulunmamaktadır.
+
+Bu projenin bilimsel niteliğini oluşturan üç temel yenilik şunlardır:
+
+(1) Adaptif Sinyal Gürültü Filtrelemesi (One-Euro Filter Entegrasyonu): Tek kameralı hareket tespiti algoritmalarının en büyük problemi, tahmin belirsizliğinden kaynaklanan milimetrik sarsıntılardır (jitter artifact). Bu projede, Casiez ve arkadaşları (2012) tarafından geliştirilen, hız duyarlılığına göre kesme frekansını anlık olarak güncelleyen adaptif One-Euro Filtresi kullanılmaktadır [10]. Bu sayede tremor analizinde gerekli olan 3-8 Hz bandındaki yüksek frekanslı fizyolojik hareketler silinmeden, yalnızca optik gürültü temizlenebilmektedir.
+
+(2) Parkinson'a Özelleşmiş Entegre FFT Tremor ve FOG Tespiti: Bu proje el bileği Y-aksı zaman serisi üzerinden hızlı Fourier dönüşümü (FFT) uygulayarak frekans domeni analizi yapmaktadır. Parkinson'a has istirahat tremoru 4-6 Hz bandında dar bantlı bir güç yoğunluğu zirvesi gösterirken, istemli kol hareketleri tipik olarak 3 Hz altında geniş bantlı bir sinyal oluşturmaktadır [11,12]. Ek olarak, yürüyüş sırasında tremorün tam olarak izole edilemediği durumlarda, sistem hastanın yürüyüş öncesi ve sonrasında 5 saniyelik hareketsiz "istirahat fazları" alarak kontrollü bir FFT ortamı sağlayacak şekilde tasarlanmıştır. Bunun yanı sıra, alt ekstremitede ayak bileği pozisyonunun 1 saniyelik kayan pencere standart sapmasının eşik altına (σ < 0.005) inmesi, "Donma Fenomeni (FOG) Skoru" (Kısmi=0.5, Tam=1.0) olarak kodlanmaktadır [3].
+
+(3) 3D Sentetik Derinlik Telafisi ile Perspektif Hata Düzeltme: Monoküler sistemlerde perspektif hataları klinik ölçümleri ciddi biçimde bozabilmektedir [13]. Bu projede MediaPipe'in "Pose World Landmarks" matrislerindeki Z-ekseni verileri Öklid mesafe denkleminde işlenmektedir. İki omuzun Z-ekseni derinlik farkının %15 eşiğini aşması durumunda sistem otomatik olarak o çerçevenin verisini askıya alarak yanlış pozitif riskini azaltmaktadır.
+
+Ön Çalışma ve Mevcut Prototip Durumu: Önerilen sistem teorik düzeyde kalmayıp, proje ekibi bünyesinde NYTAS-Parkinson v1.0 çalışır prototipi halihazırda geliştirilmiş durumdadır. Python 3.11, OpenCV ve MediaPipe Pose Tasks API kullanılarak kodlanan sistemde: gerçek zamanlı 33 eklem tespiti, One-Euro adaptif filtre modülü, 8 biyobelirteç hesaplama pipeline'ı (kol salınım asimetrisi, FFT tremor frekansı, FOG donma skoru dahil), makine öğrenmesi sınıflandırma altyapısı ve KVKK uyumlu yüz bulanıklaştırma bileşenleri fonksiyonel olarak kodlanmış ve laboratuvar ortamında test edilmiştir. Bu proje, söz konusu teknik altyapının klinik hasta verisiyle doğrulanması ve tıbbi cihaz kalitesine taşınması aşamasını finanse etmektedir. (Bkz. Şekil 5)
+
+Araştırma Sorusu: Standart 2D RGB kamera tabanlı markerless bir sistem, Parkinson'a özgü 8 dijital biyobelirteci (kol salınım asimetrisi, tremor frekansı, FOG skoru, gövde eğimi, adım uzunluğu, kadans varyabilitesi, yürüyüş hızı, kol salınım genliği) yeterli doğrulukla (AUC > 0.85) ölçerek klinik MDS-UPDRS değerlendirmesiyle uyumlu bir sınıflandırma yapabilir mi?
+
+Hipotez: Geliştirilen NYTAS-Parkinson sistemi, 8 biyobelirteç üzerinden eğitilen makine öğrenmesi modeliyle, uzman nörologların MDS-UPDRS motor değerlendirmesiyle ICC > 0.75 düzeyinde korelasyon gösteren objektif bir Parkinson risk sınıflandırması yapabilecektir.
+
+Amaç ve Hedefler
+
+Projenin amacı ve hedefleri açık, ölçülebilir, gerçekçi ve proje süresince ulaşılabilir nitelikte olacak şekilde açıklanır.
+
+Temel Amaç: Nöroloji kliniklerinde, aile sağlığı merkezlerinde veya hastaların kendi ev ortamlarında kullanılabilecek, donanım bağımsız, işaretleyicisiz (markerless) ve KVKK uyumlu bir Parkinson Yürüyüş Analiz ve Erken Uyarı Sistemi (NYTAS-Parkinson) geliştirmek ve klinik olarak doğrulamaktır.
+
+Alt Hedefler:
+
+1. İthal Vicon/Qualisys sistemlerine olan bağımlılığı yerli bir RGB kamera derin öğrenme mimarisi ile ortadan kaldırmak.
+
+2. Parkinson'un en erken motor uyarıcıları olan "Asimetrik Kol Salınımı Azalması" [8] ve "3-8 Hz İstirahat Tremoru" [11] bulgularını, One-Euro filtrelenmiş landmark verileri ve FFT spektral analizi ile tespit edilebilir hale getirmek.
+
+3. Parkinson'un ileri evrelerinde hastanın bağımsızlığını ciddi biçimde kısıtlayan "Donma Fenomeni"ni (FOG) [3], anlık ayak bileği pozisyon varyansı ile milisaniyeler içinde tespit eden bir otomatik risk skorlama algoritması kodlamak.
+
+4. Sistemin "Karar Destek" mekanizmasını Random Forest ve Gradient Boosting algoritmalarıyla eğiterek (5-Fold Stratified Cross Validation), hekime nesnel ve kantitatif bir risk değerlendirmesi sunmak.
+
+2. YÖNTEM
+
+Projede uygulanacak yöntem ve araştırma tekniklerinin, amaç ve hedeflere ulaşmaya ne düzeyde elverişli olduğu ilgili literatüre atıf yapılarak ortaya konulur. Yöntem bölümünün; araştırma tasarımı, bağımlı ve bağımsız değişkenler, istatistiksel yöntemler vb. unsurları içermesi gerekir.
+
+Araştırma Tasarımı ve Örneklem: Araştırma prospektif, kesitsel ve kontrollü bir tasarımda yürütülecektir.
+
+Katılımcılar:
+
+- Parkinson Grubu (n=30): H&Y Evre I-III, klinik olarak kesin PH tanısı almış, bağımsız yürüyebilen hastalar.
+
+- Kontrol Grubu (n=30): Yaş ve cinsiyet eşleştirilmiş, nörolojik veya ortopedik hastalığı olmayan sağlıklı gönüllüler.
+
+Dışlama Kriterleri: Bağımsız yürüyemeyen, ciddi görme/işitme kaybı olan, son 6 ayda alt ekstremite cerrahisi geçiren bireyler.
+
+Örneklem Boyutu Gerekçesi (Power Analizi): G*Power 3.1 yazılımı ile a priori güç analizi yapılmıştır. İki bağımsız grup karşılaştırması için: Parkinson yürüyüş çalışmalarında büyük etki büyüklükleri (Cohen's d = 0.8-1.2) rapor edilmektedir [8,14]. Cohen's d = 0.80, α = 0.05, 1-β = 0.80 alınarak her grup için minimum n = 26 hesaplanmıştır. Olası veri kayıpları (%15 tolerans) göz önünde bulundurularak her grupta n = 30 hedeflenmiştir. Toplam örneklem: N = 60.
+
+Veri Toplama Protokolü: Veri toplama ilgili üniversite/hastane klinik araştırmalar etik kurulu onayı alındıktan sonra başlatılacaktır. Her katılımcıdan yazılı aydınlatılmış onam alınacaktır. Çekim ortamı: standart poliklinik koridoru veya nöroloji muayene odası, 10 metrelik düz yürüme parkuru. Kamera: Tripod üzerine monte FHD (1920x1080) RGB kamera, 30 FPS, frontal konumlandırma. Her katılımcı 10 metrelik parkurda 3 kez yürütülecek, her yürüyüş öncesi ve sonrasında 5 saniyelik "istirahat fazı" kaydedilecektir (tremor FFT analizi için kontrol ortamı).
+
+KVKK Uyumu (Privacy-by-Design): Sistem, gerçek zamanlı olarak yüz bölgesini dinamik Gaussian Blur ile maskelemektedir. Video kareleri diske yazılmadan önce anonimleştirilmektedir.
+
+Teknik Mimari: Sistem Python 3.11, OpenCV, MediaPipe Tasks API (v0.10.x) ve scikit-learn üzerine inşa edilmiştir. Gelen asenkron video akışı (Threaded VideoStream mimarisi) MediaPipe Pose Landmarker modeline beslenerek vücuttaki 33 anatomik landmark gerçek zamanlı çıkarılmaktadır. Çıkarılan koordinatlar One-Euro Filtresi [10] ile jitter temizliğinden geçirildikten sonra "ParkinsonAnalizor" sınıfında 8 biyobelirteç hesaplanmaktadır:
+
+Bağımlı Değişkenler (8 Biyobelirteç):
+
+Şekil 1. NYTAS-Parkinson sistemi ile takip edilen 8 temel dijital biyobelirtecin görsel sunumu: (a) Kol salınım genliği, (b) Kol salınım asimetrisi, (c) Adım uzunluğu, (d) Kadans varyabilitesi, (e) FOG skoru, (f) Gövde öne eğimi, (g) Yürüyüş hızı, (h) Tremor frekansı.
+
+Şekil 1: NYTAS-Parkinson sistemi tarafından takip edilen 8 temel dijital biyobelirtecin görsel temsili (Görseller üretken yapay zeka ile oluşturulmuştur).
+
+1. Kol Salınım Genliği (cm): Bilek-omuz Y-aksı deplasmanı [8].
+
+Yürüyüşte kol salınımı, sinir sisteminin otomatik kontrolünü yansıtır. Parkinson hastalığında (PH) bazal gangliadaki sorunlar nedeniyle bu salınımın genişliği (genliği) belirgin şekilde azalır. Bu azalma, hastalığın klinik belirtileri tam olarak ortaya çıkmadan (prodromal dönemde) bile gözlenebilen erken bir motor belirteçtir. (Bkz. Şekil 1-a)
+
+2. Kol Salınım Asimetrisi (%): Sol/sağ kol genlik farkı [8].
+
+Parkinson hastalığı genellikle vücudun tek tarafında (unilateral) başlar. Sağlıklı kişilerde kollardaki salınım farkı çok düşükken, Parkinson hastalarında etkilenen taraftaki kol daha az salınır ve bu asimetri %20-50 seviyelerine kadar çıkar. Bu durum, bilateral koordinasyon (iki tarafın uyumu) kaybının temel göstergelerindendir. (Bkz. Şekil 1-b)
+
+3. Adım Uzunluğu (cm): 3D World Landmarks üzerinden Öklid mesafesi [1].
+
+Parkinson yürüyüşünün tipik belirtisi, hareket amplitüdünün (büyüklüğünün) küçülmesi anlamına gelen "hipokinezi" nedeniyle adımların kısalmasıdır. Hastalığın ilerleyen aşamalarında bu kısalma artarak, ayakların yerden zor kalktığı "sürüklenme" (shuffling) tarzı bir yürüyüşe dönüşür. (Bkz. Şekil 1-c)
+
+4. Kadans Varyabilitesi (s): Ardışık topuk vuruşları arası süre standart sapması [2].
+
+Sağlıklı yürüyüşte adımlar arası zamanlama düzenlidir. Parkinson'da ise bu ritmik düzen bozulur. Ardışık adımlar arasındaki sürenin değişkenliği (varyabilitesi) artar. Özellikle yürürken başka bir iş daha yapıldığında (örneğin konuşurken - dual task) bu düzensizlik çok daha belirginleşir ve düşme riskini artırır. (Bkz. Şekil 1-d)
+
+5. FOG Skoru (0-1): Ayak bileği Y-pozisyonu standart sapması eşik kontrolü [3].
+
+Donma Fenomeni (Freezing of Gait - FOG), hastanın yürümek istemesine rağmen ayaklarının "yere yapışmış" gibi hissederek hareket edememesidir. Genellikle yürümeye başlarken, dar yerlerden geçerken veya dönüşlerde tetiklenir. Yürüyüş paternindeki tam veya kısmi hareket kaybı durumunu yansıtır. (Bkz. Şekil 1-e)
+
+6. Gövde Öne Eğimi (derece): Omuz-kalça dikey eksen sapması [1].
+
+Sağlıklı kişilerde dik olan vücut duruşu, Parkinson hastalığında öne doğru eğilir (stooped posture). Kas yapısındaki zayıflık ve duruş kontrolünün bozulmasıyla gelişen bu durum, ileri evrelerde omurganın aşırı öne büküldüğü "kamptokormia" adı verilen şekle dönüşebilir. (Bkz. Şekil 1-f)
+
+7. Yürüyüş Hızı (cm/s): Kalça merkezi yatay deplasmanı/süre [2].
+
+Yürüyüş hızı, kişinin genel motor kabiliyetini gösterir. Parkinson hastalarında hareket yavaşlığı (bradikinezi) ve adımların kısalması sebebiyle yürüyüş hızı sağlıklı kişilere göre ciddi oranda düşer. Yürüyüş hızındaki azalma, hastalığın genel ilerleyişiyle doğrudan ilişkilidir. (Bkz. Şekil 1-g)
+
+8. Tremor Frekansı (Hz): El bileği Y-pozisyonu FFT, 3-8 Hz bandı [11,12].
+
+İstirahat halinde elde görülen "hap yuvarlama" tarzındaki titremeler (tremor), Parkinson'un bilinen en yaygın belirtisidir. Bu titremeler saniyede 4-6 vuruluk ritmik bir salınım(Hz) gösterir. Sinyalin analiz edilmesiyle (FFT), diğer titreme türlerinden sayısal olarak ayırt edilir. (Bkz. Şekil 1-h)
+
+Bağımsız Değişken: Grup (Parkinson / Sağlıklı Kontrol).
+
+Tremor Frekansı Tespitinde Metodolojik Ayrıştırma: İstemli kol salınımı 0,5-2,5 Hz arasında geniş bantlı sinyal üretirken, Parkinson tremoru 4-6 Hz arasında dar bantlı spektral zirve oluşturmaktadır [11,12]. Bu ~1,5 Hz'lik frekans aralığı FFT ile ayrıştırmayı mümkün kılmaktadır. (a) FFT yalnızca 3-8 Hz bandına maskelenerek uygulanmakta; (b) baskın frekans zirvesinin genliği spektrum ortalamasının 2,5 katını aşmadığında "gürültü" olarak sınıflandırılmakta; (c) yürüyüş öncesi/sonrasındaki istirahat fazlarında karşılaştırmalı doğrulama yapılmaktadır.
+
+İstatistiksel Yöntemler: Çıkarılan 8 biyobelirteç StandardScaler ölçeklemesinden geçirilerek Random Forest (n_estimators=200, max_depth=10, class_weight="balanced") ve Gradient Boosting (n_estimators=200, max_depth=5, learning_rate=0.1) algoritmalarına beslenmektedir. Her iki model 5-Fold Stratified Cross-Validation ile çapraz doğrulanmaktadır. Küçük örneklem riski için: (a) SMOTE ile sentetik veri artırımı; (b) PhysioNet açık veri seti [15] ile transfer öğrenme; (c) max_depth ve min_samples_split ile kapasite kontrolü uygulanacaktır. Klinik validasyon için ICC (iki yönlü karma model, mutlak uyuşma), Sensitivity, Specificity, F1-Score ve ROC eğrisi raporlanacaktır. Hedef: ICC > 0.75, AUC > 0.85 (Bkz. Şekil 2: Biyobelirteç Bazlı Performans Hedefleri ve Literatür Karşılaştırması)."
+
+Şekil 2. NYTAS-Parkinson sistemi için belirlenen 8 dijital biyobelirtecin literatürdeki erken teşhis etkinlik düzeyleri (2016-2023) ve projenin hedef performans (AUC > 0.85) eşikleri.
+
+3. PROJE YÖNETİMİ
+
+3.1. İş-Zaman Çizelgesi 
+
+Projenin iş paketlerinin (İP) kimler tarafından ve hangi zaman aralıklarında gerçekleştirileceği “İş-Zaman Çizelgesi(*)”nde sunulur. Literatür taraması, gelişme ve sonuç raporu hazırlama aşamaları, proje sonuçlarının paylaşımı, makale yazımı ve malzeme alımı iş paketi olarak sunulmamalıdır.
+
+İP No
+
+İş Paketinin
+
+ Adı
+
+Kim(ler) Tarafından Gerçekleştirileceği (**)
+
+Aylar
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9
+
+10
+
+11
+
+12
+
+1
+
+Etik Kurul Başvurusu ve Altyapı Hazırlığı
+
+Mahyar (Y), Ahmet (A)
+
+x
+
+x
+
+2
+
+Veri Toplama
+
+Ahmet (A), Klinik Danışman(D)
+
+x
+
+x
+
+x
+
+x
+
+3
+
+Model Eğitimi ve Optimizasyon
+
+Mahyar (Y), Ahmet (A)
+
+x
+
+x
+
+x
+
+4
+
+Klinik Validasyon
+
+Mahyar (Y), Klinik Danışman(D)
+
+x
+
+x
+
+5
+
+Raporlama ve Yayın
+
+Mahyar (Y), Ahmet (A)
+
+x
+
+İş paketlerinin zaman içindeki dağılımı ve birbirleriyle olan ardışıllığı Şekil 3'te sunulan Gantt çizelgesinde detaylandırılmıştır.     (Y: Yürütücü, A: Araştırmacı, D: Danışman)
+
+(*) Çizelgedeki satırlar gerektiği kadar genişletilebilir ve çoğaltılabilir. Proje süresi en fazla 12 ay olabilir. 
+
+(**) İP’de görev alacak kişilerin isimleri ve görevleri (yürütücü, araştırmacı, danışman, bursiyer ve yardımcı personel) yazılır. Bu aşamada bursiyer(ler)in isimlerinin belirtilmesi zorunlu değildir. Proje ekibinde araştırmacı ve danışman olarak görev alacak kişiler çevrim içi başvuru sırasında başvuru ekranındaki "Proje Personeli" adımından Proje Başvuru Sistemine (PBS) eklenmeli, yardımcı personel ve bursiyer olacak kişiler için ise başvuru formunun "Ek-2 Bütçe ve Gerekçesi" dokümanında bilgi verilmelidir.
+
+Şekil 3. Proje iş paketlerinin 12 aylık sürece yayılımını gösteren Gantt çizelgesi
+
+3.2. Başarı Ölçütleri
+
+Başarı ölçütü olarak her bir iş paketinin hangi kriter(ler)i sağladığında başarılı sayılacağı açıklanır. Başarı ölçütü, ölçülebilir ve izlenebilir nitelikte olacak şekilde nicel veya nitel ölçütlerle (sayı, yüzde, ifade vb.) belirtilir. 
+
+İP No
+
+Başarı Ölçütleri
+
+Proje Başarısındaki Katkısı (%) (*)
+
+1
+
+Etik kurul onayının alınması; yazılımın klinik ortamda hatasız çalışması
+
+15
+
+2
+
+Minimum 60 katılımcıdan toplam 180 yürüme denemesi kaydı
+
+30
+
+3
+
+5-Fold CV'de Accuracy > %85, AUC-ROC > 0.85
+
+25
+
+4
+
+Uzman nörologlarla ICC > 0.75 (iyi-mükemmel uyum)
+
+20
+
+5
+
+TÜBİTAK Proje Sonuç Raporu teslimi; SCI-E dergisine makale gönderimi
+
+10
+
+(*) Bu bölüme 0-100 arası sayısal değerler verilir ve sütun toplamının 100 olması gerekir.
+
+3.3. Risk Yönetimi
+
+Projenin başarısını olumsuz yönde etkileyebilecek riskler ve bu risklerle karşılaşıldığında projenin başarıyla yürütülmesini sağlamak için alınacak tedbirler (B Planı) iş paketleriyle ilişkilendirilerek aşağıdaki tabloda sunulur. B Plan(lar)ının uygulanması projenin temel hedeflerinden sapmaya yol açmamalıdır. B Plan(lar)ına geçilmesi durumunda yöntem değişikliğine gidiliyor ise bu durum detaylandırılmalıdır. Her bir iş paketi için risk öngörülmesi zorunlu değildir.
+
+İP No
+
+En Önemli Riskler
+
+Alınacak Tedbirler (B Planı)
+
+1
+
+Yeterli sayıda Parkinson hastasına belirlenen sürede ulaşılamaması
+
+Halka açık PhysioNet ve Kaggle veri setleri destek veri olarak entegre edilecektir [15]
+
+2
+
+Yürüyüş sırasında FFT ile tremor tespitinin istemli hareket artefaktları nedeniyle yetersiz doğruluk
+
+Tremor tespiti yalnızca kontrollü istirahat fazlarında yapılacak şekilde protokol revize edilecek; STFT veya Wavelet dönüşümü ile zaman-frekans çözünürlüğü artırılacaktır.
+
+3
+
+Küçük örneklem (N=60) ile 8 özellikten model eğitiminde overfitting riski
+
+SMOTE ile sentetik veri artırımı, max_depth sınırlandırması ve PhysioNet transfer öğrenmesi uygulanacaktır.
+
+4
+
+Kameranın perspektif bozulmaları nedeniyle kabul edilemez ölçüm hataları
+
+"Referans Ölçekleme" yöntemiyle hastanın boyu girilerek piksel-metrik denklemi dinamik olarak güncellenecektir. Bu mekanizma mevcut yazılımda programlanmıştır.
+
+(*) Tablodaki satırlar gerektiği kadar genişletilebilir ve çoğaltılabilir.
+
+4. ÇIKTI, ETKİ VE KAZANIMLAR
+
+Proje başarıyla gerçekleştirildiği takdirde projeden elde edilmesi öngörülen; 
+
+Çıktılar (bilimsel, ekonomik, sosyal, araştırmacı yetiştirilmesi ve yeni projeler oluşturulması vb.),
+
+Etkiler (bilimsel, teknolojik, sosyo-ekonomik, kültürel, çevresel vb.),
+
+Kazanımlar
+
+ile bunlardan kimlerin, nasıl yararlanacağı kısa ve net olarak aşağıdaki tabloda açıklanır. 
+
+ Öngörülen Çıktı, Etki ve Kazanımlar
+
+Öngörülen Zaman Aralığı (*)
+
+Çıktılar
+
+(Ulusal/Uluslararası Makale, Kitap, Bildiri, Prototip, Patent, Tez, Yeni Proje vb.)
+
+SCI-E indeksli dergide 1 adet özgün araştırma makalesi
+
+1 adet ulusal/uluslararası konferans bildirisi
+
+NYTAS-Parkinson v2.0 çalışır yazılım prototipi
+
+Türkiye Parkinson Yürüyüş Verileri açık veri seti (KVKK uyumlu)
+
+SaMD (Tıbbi Cihaz Yazılımı) fizibilite teknik dosyası
+
+6-12 ay
+
+6-12 ay
+
+6-12 ay
+
+6-12 ay
+
+6-12 ay
+
+Etki ve Kazanımlar
+
+(Öngörülen Uygulama Alanları, Uygulayıcı Kurum/Kuruluşlar, Yeni İş Birliklerinin Kurulması, Politika Yapımına Katkı, Önemli Bir Soruna Getirilecek Çözüm, Kariyer Gelişimi vb.)
+
+İthal Vicon/GAITRite sistemlerine alternatif yerli yazılım; döviz tasarrufu ve ithal ikamesi
+
+Parkinson hastalarının yaşam kalitesinin iyileştirilmesi; erken tanı ile düşme riskinin azaltılması
+
+Kırsal/küçük kliniklerde erişilebilir yürüyüş analizi imkânı
+
+Markerless Parkinson yürüyüş analizi alanında Türkiye'den ilk kapsamlı çalışma; açık veri seti katkısı
+
+SaMD ticarileştirme potansiyeli (TEKNOFEST, TÜSEB Ar-Ge destekleri ile büyüme)
+
+Lisans öğrencisinin araştırma deneyimi kazanması; kariyer gelişimine katkı
+
+Proje sonrası
+
+Proje sonrası
+
+Proje sonrası
+
+ 6-12 ay
+
+Proje sonrası
+
+0-12 ay
+
+(*) Çıktı, etki ve kazanımların elde edilmesinin öngörüldüğü zaman aralığı 0-6 ay, 6-12 ay, proje sonrası vb. şeklinde belirtilir.
+
+BELİRTMEK İSTEDİĞİNİZ DİĞER KONULAR
+
+Sadece proje önerisinin değerlendirilmesine katkı sağlayabilecek bilgi veya veri (grafik, tablo vb.) eklenebilir. 
+
+Proje ekibi bünyesinde NYTAS-Parkinson v1.0 çalışır prototipi halihazırda geliştirilmiş durumdadır. Sistemin mimari yapısı ve temsili kod parçası aşağıda sunulmuştur.
+
+Sistem Blok Diyagramı:
+
+Kamera (RGB 30FPS) → Threaded VideoStream → MediaPipe Pose Landmarker (33 eklem, 3D) → One-Euro Adaptif Filtre → ParkinsonAnalizor (8 Biyobelirteç) → ParkinsonTemporal (FOG, Tremor FFT, Kadans) → ML Sınıflandırma (Random Forest / Gradient Boosting) → Sonuç ("NORMAL" / "PARKINSON RİSKİ") + Güven (%) → Veri Logger (CSV + Anonimleştirilmiş Video)
+
+Temsili Kod Parçası (Tremor FFT Analizi):
+
+    def _tremor_fft(self, sinyal_deque, fps=30):
+
+        sinyal = np.array(list(sinyal_deque), dtype=float)
+
+        sinyal = sinyal - np.mean(sinyal)  # DC bileşeni çıkar
+
+        fft_vals = np.abs(np.fft.rfft(sinyal))
+
+        freqs = np.fft.rfftfreq(len(sinyal), d=1.0/fps)
+
+        mask = (freqs >= 3.0) & (freqs <= 8.0)  # 3-8 Hz Parkinson tremor bandı
+
+        fft_band = fft_vals[mask]
+
+        freq_band = freqs[mask]
+
+        peak_idx = np.argmax(fft_band)
+
+        peak_amp = fft_band[peak_idx]
+
+        if peak_amp > np.mean(fft_vals[1:]) * 2.5:  # Genlik eşiği
+
+            return float(freq_band[peak_idx])  # Hz
+
+        return 0.0
+
+Yukarıda sunulan algoritmanın ham sinyal üzerindeki etkisi, optik gürültünün (jitter) One-Euro filtresi ile temizlenmesi ve ardından FFT ile Parkinson'a özgü 5.2 Hz'lik tremor zirvesinin (peak) tespiti Şekil 4’te görselleştirilmiştir.
+
+Şekil 4. NYTAS-Parkinson sinyal işleme hattı: (Solda) Kameradan gelen gürültülü ham veri, (Ortada) One-Euro adaptif filtresinden geçmiş temiz sinyal, (Sağda) Tremor frekansını belirleyen FFT güç spektrumu.
+
+Şekil 5: NYTAS-Parkinson v1.0 Yazılım Arayüzü ve Gerçek Zamanlı Analiz Ekranı
+
+Bu görselde, geliştirilen prototipin ana çalışma ekranı görülmektedir. Yazılım arayüzünde öne çıkan bileşenler şunlardır:
+
+İskelet Modeli (Skeletal Overlay): MediaPipe Pose Landmarker aracılığıyla 33 anatomik eklem noktası gerçek zamanlı olarak takip edilmektedir.
+
+Anlık Biyobelirteç Paneli: Ekranın sol tarafında; kol salınımı genliği (cm), asimetri yüzdesi (%) ve adım uzunluğu gibi temel motor parametreler anlık olarak hesaplanıp listelenmektedir.
+
+Temporal Analiz ve Karar Destek: Alt panelde; FFT tabanlı tremor frekansı (Hz), FOG (donma) durumu ve yürüyüş hızı gibi zamana bağlı veriler sunulmaktadır.
+
+KVKK ve Gizlilik Katmanı: Sistemin giriş ekranından aktif edilen dinamik Gaussian Blur modülü ile hastanın yüz bölgesi gerçek zamanlı olarak maskelenmekte ve veri anonimliği sağlanmaktadır.
+
+Risk Sınıflandırması: Ekranın üst kısmında, makine öğrenmesi modelinin (Random Forest/Gradient Boosting) ürettiği "PARKINSON RİSKİ" veya "NORMAL" sonucu ve bu sonucun güven yüzdesi gösterilmektedir.
+
+Araştırma Ekibi Detayları:
+
+Proje Yürütücüsü: Mahyar Teymournezhad (Biruni Üniversitesi, Bilgisayar Mühendisliği Bölümü)
+
+- Görev: Proje koordinasyonu, ML model mimarisi tasarımı, veri analizi denetimi, klinik validasyon sürecinin yönetimi.
+
+- Yetkinlik: Yapay Zekâ, Makine Öğrenmesi, Evrimsel Optimizasyon ve Robotik alanlarında akademik araştırma deneyimi.
+
+Araştırmacı (Bursiyer): Ahmet Eren Yıldız (Biruni Üniversitesi, Bilgisayar Mühendisliği Bölümü, Lisans Öğrencisi)
+
+- Görev: NYTAS-Parkinson yazılımının geliştirilmesi ve bakımı, veri toplama sürecinde çekim operatörlüğü, CSV veri dosyalarının oluşturulması ve kalite kontrolü, ML model eğitim scriptlerinin kodlanması.
+
+- Yetkinlik: Python, OpenCV, MediaPipe ve scikit-learn ile bilgisayarlı görü ve makine öğrenmesi uygulamaları. NYTAS-Parkinson v1.0 prototipini bağımsız olarak geliştirmiştir.
+
+Danışman (Klinik): [Nöroloji Uzmanı — Biruni Üniversitesi Hastanesi veya iş birliği yapılacak hastaneden belirlenecektir]
+
+- Görev: Hasta seçimi, MDS-UPDRS motor alt ölçeği (Part III) ile standart puanlama, klinik validasyon değerlendirmesi.
+
+BAŞVURU FORMU EKLERİ
+
+EK-1: KAYNAKLAR
+
+[1] Poewe, W., Seppi, K., Tanner, C.M., et al. (2017). Parkinson's disease. Nature Reviews Disease Primers, 3(1), 17013. doi:10.1038/nrdp.2017.13
+
+[2] Mirelman, A., Bonato, P., Camicioli, R., et al. (2019). Gait impairments in Parkinson's disease. The Lancet Neurology, 18(7), 697-708. doi:10.1016/S1474-4422(19)30044-4
+
+[3] Nutt, J.G., Bloem, B.R., Giladi, N., et al. (2011). Freezing of gait: moving forward on a mysterious clinical phenomenon. The Lancet Neurology, 10(8), 734-744. doi:10.1016/S1474-4422(11)70143-0
+
+[4] Goetz, C.G., Tilley, B.C., Shaftman, S.R., et al. (2008). Movement Disorder Society-sponsored revision of the Unified Parkinson's Disease Rating Scale (MDS-UPDRS). Movement Disorders, 23(15), 2129-2170. doi:10.1002/mds.22340
+
+[5] Simon, S.R. (2004). Quantification of human motion: Gait analysis—benefits and limitations. Journal of Biomechanics, 37(12), 1869-1880. doi:10.1016/j.jbiomech.2004.02.047
+
+[6] Espay, A.J., Bonato, P., Nahab, F.B., et al. (2016). Technology in Parkinson's disease: Challenges and opportunities. Movement Disorders, 31(9), 1272-1282. doi:10.1002/mds.26642
+
+[7] Stenum, J., Hsu, M.M., Pantelyat, A., Roemmich, R.T. (2023). Validity of artificial intelligence-based markerless motion capture system for clinical gait analysis. Computer Methods and Programs in Biomedicine, 235, 107520. doi:10.1016/j.cmpb.2023.107520
+
+[8] Mirelman, A., Bernad-Elazari, H., Thaler, A., et al. (2016). Arm swing as a potential new prodromal marker of Parkinson's disease. Movement Disorders, 31(10), 1527-1534. doi:10.1002/mds.26720
+
+[9] Doherty, C., Zhao, L., Ryan, J., et al. (2022). Evaluation of arm swing features and asymmetry during gait in Parkinson's disease using the Azure Kinect sensor. Sensors, 22(6), 2248. doi:10.3390/s22062248
+
+[10] Casiez, G., Roussel, N., Vogel, D. (2012). 1€ Filter: A simple speed-based low-pass filter for noisy input in interactive systems. Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '12), 2527-2530. doi:10.1145/2207676.2208639
+
+[11] Deuschl, G., Bain, P., Brin, M. (1998). Consensus statement of the Movement Disorder Society on Tremor. Movement Disorders, 13(S3), 2-23. doi:10.1002/mds.870131303
+
+[12] Luft, F., Sharifi, S., Mugge, W., et al. (2014). Deficits in tapping accuracy and variability in tremor patients. Journal of NeuroEngineering and Rehabilitation, 11, 120. doi:10.1186/1743-0003-11-120
+
+[13] Wade, L., Needham, L., McGuigan, P., Bilzon, J. (2022). Applications and limitations of current markerless motion capture methods for clinical gait biomechanics. PeerJ, 10, e12995. doi:10.7717/peerj.12995
+
+[14] Huang, X., Mahoney, J.M., Lewis, M.M., et al. (2012). Both coordination and symmetry of arm swing are reduced in Parkinson's disease. Gait & Posture, 35(3), 373-377. doi:10.1016/j.gaitpost.2011.10.180
+
+[15] Goldberger, A.L., Amaral, L.A.N., Glass, L., et al. (2000). PhysioBank, PhysioToolkit, and PhysioNet: Components of a New Research Resource for Complex Physiologic Signals. Circulation, 101(23), e215-e220. doi:10.1161/01.CIR.101.23.e215
+
+EK-2: BÜTÇE VE GEREKÇESİ
+
+Teknik Altyapı Notu: Model eğitimi ve veri işleme için gerekli olan GPU destekli yüksek performanslı bilgisayar, Biruni Üniversitesi Bilgisayar Mühendisliği Bölümü'nün mevcut laboratuvar altyapısından karşılanacaktır. Proje bütçesinden bu kalem için ayrıca ödenek talep edilmemektedir.
+
+1. Makine-Teçhizat (Toplam: 40.000 TL)
+
+4K RGB Kamera (Logitech MX Brio veya Muadili): 15.000 TL
+
+Gerekçe: İşaretleyicisiz (markerless) pose tespiti ve MediaPipe modelinin "jitter" (titreme) hatasını minimize etmek için yüksek çözünürlüklü ve 60 FPS destekli bir optik sensör gereklidir.
+
+Profesyonel Video Tripodu: 4.000 TL
+
+Gerekçe: FFT tabanlı tremor (titreme) analizi hassas frekans aralıklarında (3-8 Hz) yapıldığı için kameranın zemine tam sabitlenmesi ve optik sarsıntının önlenmesi zorunludur.
+
+Harici NVMe SSD Depolama (2TB, Yüksek Hızlı): 19.000 TL
+
+Gerekçe: 60 FPS hızında kaydedilen yüksek çözünürlüklü video verilerinin veri kaybı yaşanmadan eş zamanlı olarak diske yazılması ve yedeklenmesi için yüksek okuma/yazma hızına sahip disk gereklidir.
+
+Yürüme Parkuru ve Kalibrasyon Malzemeleri: 2.000 TL
+
+2. Sarf Malzemesi (Toplam: 10.000 TL)
+
+Bilişim Sarf Malzemeleri: 6.000 TL
+
+Gerekçe: Veri transferi için gerekli yüksek hızlı Type-C kablolar, adaptörler ve veri depolama birimleri.
+
+Kırtasiye ve Onam Formu Baskıları: 4.000 TL
+
+3. Seyahat (Toplam: 20.000 TL)
+
+Klinik Veri Toplama Seferleri: 10.000 TL
+
+Gerekçe: 60 katılımcıdan veri toplama sürecinde hastane ve klinik ziyaretleri için ulaşım ve saha giderleri.
+
+Ulusal/Uluslararası Konferans Katılımı: 10.000 TL
+
+Gerekçe: Proje çıktılarının bilimsel camiayla paylaşılması için ulaşım ve konaklama giderleri.
+
+4. Hizmet Alımı (Toplam: 20.000 TL)
+
+İstatistik Danışmanlığı: 10.000 TL
+
+Gerekçe: G*Power analizi, ICC (Intraclass Correlation) ve ROC eğrilerinin klinik doğrulanması için uzman desteği.
+
+İngilizce Dil Düzeltme (Proofreading): 10.000 TL
+
+Gerekçe: SCI-E indeksli dergilerde yayınlanacak makalelerin dil kalitesinin artırılması.
+
+5. Yayın Giderleri (Toplam: 10.000 TL)
+
+Konferans Kayıt ve Yayın İşlemleri: 10.000 TL
+
+TOPLAM TALEP: 100.000 TL (Bursiyer Ücretleri Hariç)

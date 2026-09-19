@@ -16,6 +16,39 @@
 | **Hibrit Karar Motoru** | ML modeline ek olarak 8 parametreli klinik kural motoru eklendi. 3+ parametre klinik eşiği aşarsa risk bildirilir. |
 | **HUD Risk Renklendirme** | Canlı ekrandaki parametreler klinik eşik değerlerine göre kırmızı/yeşil renklendiriliyor. |
 | **ML Tutarlılık** | Tüm ML girdi değerleri artık temporal ortalamalara (sliding window) dayalı — anlık/temporal karışıklık giderildi. |
+| **Klinik Etiketleme (Ground Truth)** | Hekim tarafından doğrulanmış ön tanı etiketlemesi (`0: Sağlıklı`, `1: Parkinson`) eklendi. |
+| **Kararlı Seans Havuzu** | Binlerce gürültülü video karesi yerine seans başına 1 satırlık stabil medikal profil (`seanslar_ozet.csv`) oluşturuluyor. |
+| **Otomatik Medikal Raporlama** | Test bitiminde tek tıkla yazdırılabilir A4 medikal HTML/PDF raporu ve biyobelirteç radar analizi üretiliyor. |
+
+---
+
+## 🖥️ Çalışır Prototip ve Canlı Analiz Ekranı
+
+Aşağıdaki görselde, TÜBİTAK 1002-A proje başvuru formunda da sunulan **NYTAS-Parkinson** çalışan prototipinin gerçek zamanlı test arayüzü yer almaktadır:
+
+<p align="center">
+  <img src="dokumanlar/gorseller/nytas_prototip_canli_analiz.jpeg" alt="NYTAS-Parkinson Çalışır Prototip Arayüzü" width="460">
+  <br>
+  <em>Şekil 1: NYTAS-Parkinson Gerçek Zamanlı Analiz & Karar Destek Ekranı (TÜBİTAK 1002-A Başvuru Formu Şekil 5)</em>
+</p>
+
+* **İskelet Modeli (Skeletal Overlay):** MediaPipe Pose Landmarker ile 33 anatomik eklem noktası 30 FPS hızında takip edilir.
+* **Anlık Biyobelirteç Paneli (Sol):** Kol salınımı (sol/sağ cm), salınım asimetrisi (%) ve adım uzunluğu milisaniyelik hesaplanır.
+* **Temporal Analiz Paneli (Alt):** FFT tabanlı el tremoru frekansı (Hz), Donma Fenomeni (FOG) ve yürüyüş hızı gösterilir.
+* **KVKK & Gizlilik Katmanı:** Gerçek zamanlı dinamik Gaussian Blur ile hastanın yüzü anonimleştirilir.
+* **Hibrit Karar Destek (Üst):** Makine öğrenmesi modeli ve klinik kural motoru ile anlık teşhis ve güven skoru sunulur.
+
+---
+
+## 📈 Sinyal İşleme ve FFT Tremor Analiz Hattı
+
+Kameradan gelen optik gürültü (jitter artifact), **One-Euro Adaptif Filtresi** ile el titremesi frekansları silinmeden temizlenir; ardından FFT spektrumu ile 3-8 Hz bandındaki Parkinson tremoru tespit edilir:
+
+<p align="center">
+  <img src="dokumanlar/gorseller/sinyal_isleme_one_euro_fft.png" alt="NYTAS-Parkinson Sinyal İşleme Hattı" width="850">
+  <br>
+  <em>Şekil 2: Gürültülü Ham Veri, One-Euro Filtrelenmiş Temiz Sinyal ve 5.2 Hz Tremor FFT Spektrumu (Başvuru Formu Şekil 4)</em>
+</p>
 
 ---
 
@@ -41,14 +74,18 @@ PARKİNSON-NYTAS/
 │   └── processed/               # Canlı Seans Kayıtları & Master CSV
 │       └── nytas_parkinson_veri/
 │           ├── parkinson_master.csv
+│           ├── seanslar_ozet.csv # 1 Satırlık Kararlı Seans Medikal Özetleri
 │           └── seans_001 ... seans_006/
 │
 ├── kaynak_kodlar/               # Kaynak Kodlar (Eski: src)
 │   ├── nytas_parkinson.py       # Canlı Yürüyüş Analizi & GUI / Kamera Modülü
-│   └── model_egitim_parkinson.py# ML Modeli Eğitim ve Değerlendirme Betiği
+│   ├── model_egitim_parkinson.py# ML Modeli Eğitim ve Değerlendirme Betiği
+│   └── rapor_olusturucu.py      # Otomatik Medikal HTML/PDF Klinik Rapor Motoru
 │
 ├── dokumanlar/                  # Proje Dokümantasyonu & Başvuru Formları (Eski: docs)
 │   ├── 1002_a_basvuru_formu_nystas-parkinson_2026_v3.doc
+│   ├── basvuru_formu.docx
+│   ├── gorseller/               # Proje ve Prototip Görsel Varlıkları
 │   └── YOL_HARITASI_VE_PROTOTIP_PLANI.md # Gelecek Yol Haritası ve Prototip Planı
 │
 ├── calistirma_betikleri/        # Çalıştırma, Kurulum ve Kısayol Betikleri (Eski: scripts)
@@ -95,3 +132,9 @@ python main.py
 6. **Gövde Öne Eğimi** (Trunk Flexion / Camptocormia)
 7. **Yürüyüş Hızı** (Gait Velocity)
 8. **El Tremor Frekansı** (Hand Tremor Frequency via FFT)
+
+<p align="center">
+  <img src="dokumanlar/gorseller/biyobelirtec_erken_teshis_etkinligi.png" alt="8 Biyobelirteç Erken Teşhis Etkinliği" width="850">
+  <br>
+  <em>Şekil 3: NYTAS-Parkinson 8 Biyobelirtecin Erken Teşhis Etkinliği ve Literatür Kanıt Düzeyleri (Başvuru Formu Şekil 2)</em>
+</p>
