@@ -175,6 +175,7 @@ class Config:
     VIDEO_KAYDET: bool        = True
     CSV_KAYDET: bool          = True
     ML_MODEL_DOSYASI: str     = DEFAULT_ML_MODEL
+    KLINIK_ETIKET: int        = -1      # -1: Bilinmiyor/Rutin Tarama, 0: Saglikli Kontrol, 1: Parkinson Hastasi
 
     KAMERA_FPS: int           = 30
     KAMERA_COZUNURLUK_W: int  = 640
@@ -716,6 +717,8 @@ class VeriLogger:
         "fog_skoru", "tremor_hz_L", "tremor_hz_R", "tremor_hz_max",
         # Hibrit Klinik Karar
         "klinik_risk_sayisi",
+        # Gercek Klinik Etiket (Ground Truth: -1: Bilinmiyor, 0: Saglikli, 1: Parkinson)
+        "klinik_etiket",
     ]
 
     def __init__(self, seans_no: int, veri_dizini: str, video_kaydet: bool):
@@ -753,6 +756,7 @@ class VeriLogger:
             "timestamp": f"{ts:.3f}",
             "tarih_saat": datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S"),
             "frame": self.frame_sayaci, "tahmin": tahmin, "guven_pct": f"{guven:.1f}",
+            "klinik_etiket": getattr(CFG, "KLINIK_ETIKET", -1),
         }
         for k, v in {**fv, **tm}.items():
             satir[k] = f"{v:.4f}" if isinstance(v, float) else v
@@ -802,10 +806,11 @@ def yuz_gizle(frame: np.ndarray, lm, w: int, h: int):
 # =========================================================================
 # Tkinter Giris Ekrani
 # =========================================================================
-def programi_baslat(id_ent, boy_ent, cam_ent, rot_var, blur_var, root):
+def programi_baslat(id_ent, boy_ent, cam_ent, rot_var, blur_var, durum_cb, root):
     k_id = id_ent.get().strip()
     k_boy = boy_ent.get().strip()
     k_cam = cam_ent.get().strip()
+    durum_str = durum_cb.get()
 
     if not k_id or not k_boy:
         messagebox.showerror("Hata", "Lütfen Hasta ID ve Boy alanlarını doldurun!")
@@ -828,6 +833,14 @@ def programi_baslat(id_ent, boy_ent, cam_ent, rot_var, blur_var, root):
     CFG.KULLANICI_BOYU_CM = boy_f
     CFG.KAMERA_DONDUR = bool(rot_var.get())
     CFG.YUZU_GIZLE = bool(blur_var.get())
+
+    # Klinik Etiket Belirle (Ground Truth)
+    if "Sağlıklı" in durum_str:
+        CFG.KLINIK_ETIKET = 0
+    elif "Parkinson" in durum_str:
+        CFG.KLINIK_ETIKET = 1
+    else:
+        CFG.KLINIK_ETIKET = -1
 
     root.destroy()
     analiz_baslat()
@@ -859,7 +872,7 @@ def gecmis_sil():
 def giris_ekrani():
     root = tk.Tk()
     root.title("NYTAS-Parkinson | Giriş & Yapılandırma")
-    root.geometry("520x620")
+    root.geometry("530x650")
     root.eval('tk::PlaceWindow . center')
     root.configure(bg="#1a1a2e")
 
@@ -883,29 +896,45 @@ def giris_ekrani():
     boy_ent.insert(0, "175.0")
     boy_ent.grid(row=1, column=1, pady=6, padx=10, sticky="w")
 
+    # Klinik Durum / Etiket (Ground Truth)
+    tk.Label(frm, text="Klinik Durum:", font=("Helvetica", 10, "bold"), bg="#1a1a2e", fg="#38bdf8").grid(row=2, column=0, pady=6, sticky="w")
+    durum_cb = ttk.Combobox(
+        frm,
+        values=[
+            "Bilinmiyor / Rutin Tarama",
+            "Sağlıklı Kontrol Grubu (Referans)",
+            "Tanı Almış Parkinson Hastası"
+        ],
+        state="readonly",
+        font=("Helvetica", 9),
+        width=25
+    )
+    durum_cb.current(0)
+    durum_cb.grid(row=2, column=1, pady=6, padx=10, sticky="w")
+
     # Kamera Kaynağı
-    tk.Label(frm, text="Kamera Kaynağı:", font=("Helvetica", 10, "bold"), bg="#1a1a2e", fg="#eee").grid(row=2, column=0, pady=6, sticky="w")
+    tk.Label(frm, text="Kamera Kaynağı:", font=("Helvetica", 10, "bold"), bg="#1a1a2e", fg="#eee").grid(row=3, column=0, pady=6, sticky="w")
     cam_ent = tk.Entry(frm, font=("Helvetica", 10), width=24)
     cam_ent.insert(0, "0")
-    cam_ent.grid(row=2, column=1, pady=6, padx=10, sticky="w")
+    cam_ent.grid(row=3, column=1, pady=6, padx=10, sticky="w")
 
     btn_file = tk.Button(frm, text="Video Seç", font=("Helvetica", 8, "bold"), bg="#2c3e50", fg="white",
                          command=lambda: video_dosyasi_sec(cam_ent))
-    btn_file.grid(row=2, column=2, pady=6, padx=2)
+    btn_file.grid(row=3, column=2, pady=6, padx=2)
 
     cam_info = "(0: Dahili Web Cam, 1: Harici Cam, veya IP URL / Video Yolu)"
-    tk.Label(frm, text=cam_info, font=("Helvetica", 8), bg="#1a1a2e", fg="#aaa").grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 6))
+    tk.Label(frm, text=cam_info, font=("Helvetica", 8), bg="#1a1a2e", fg="#aaa").grid(row=4, column=0, columnspan=3, sticky="w", pady=(0, 6))
 
     # Checkboxlar
     rot_var = tk.IntVar(value=0)
     tk.Checkbutton(frm, text="Telefon Dikey Çekim Modu (90° Döndür)", variable=rot_var,
                    font=("Helvetica", 9), bg="#1a1a2e", fg="#eee",
-                   selectcolor="#333", activebackground="#1a1a2e").grid(row=4, column=0, columnspan=3, pady=4, sticky="w")
+                   selectcolor="#333", activebackground="#1a1a2e").grid(row=5, column=0, columnspan=3, pady=4, sticky="w")
 
     blur_var = tk.IntVar(value=1)
     tk.Checkbutton(frm, text="Yüzü Gizle / Bulanıklaştır (KVKK Uyumlu)", variable=blur_var,
                    font=("Helvetica", 9), bg="#1a1a2e", fg="#eee",
-                   selectcolor="#333", activebackground="#1a1a2e").grid(row=5, column=0, columnspan=3, pady=4, sticky="w")
+                   selectcolor="#333", activebackground="#1a1a2e").grid(row=6, column=0, columnspan=3, pady=4, sticky="w")
 
     uyari = (
         "ÖNEMLİ BİLGİLENDİRME:\n"
@@ -922,7 +951,7 @@ def giris_ekrani():
 
     tk.Button(btn_frm, text="▶ Analizi Başlat", font=("Helvetica", 11, "bold"),
               bg="#0f3460", fg="white", width=22, height=1,
-              command=lambda: programi_baslat(id_ent, boy_ent, cam_ent, rot_var, blur_var, root)).grid(row=0, column=0, pady=5)
+              command=lambda: programi_baslat(id_ent, boy_ent, cam_ent, rot_var, blur_var, durum_cb, root)).grid(row=0, column=0, pady=5)
     tk.Button(btn_frm, text="🗑 Geçmiş Seansları Sil", font=("Helvetica", 9),
               bg="#c0392b", fg="white", width=22,
               command=gecmis_sil).grid(row=1, column=0, pady=5)
@@ -1167,6 +1196,7 @@ if __name__ == "__main__":
         parser.add_argument("--kamera", default="0")
         parser.add_argument("--dondur", action="store_true")
         parser.add_argument("--no-blur", action="store_true")
+        parser.add_argument("--etiket", type=int, default=-1, choices=[-1, 0, 1], help="-1: Bilinmiyor, 0: Saglikli, 1: Parkinson")
         args = parser.parse_args()
 
         CFG.KULLANICI_ID = args.id
@@ -1174,6 +1204,7 @@ if __name__ == "__main__":
         CFG.KAMERA_KAYNAK = int(args.kamera) if str(args.kamera).isdigit() else args.kamera
         CFG.KAMERA_DONDUR = args.dondur
         CFG.YUZU_GIZLE = not args.no_blur
+        CFG.KLINIK_ETIKET = args.etiket
         analiz_baslat()
     else:
         giris_ekrani()

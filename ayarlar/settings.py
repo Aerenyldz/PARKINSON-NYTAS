@@ -38,6 +38,7 @@ PARKINSON_MODEL_PATH = MODELLER_DIR / "parkinson_model.pkl"
 DATASET_NORMAL_PATH = HAM_VERI_DIR / "dataset_normal_parkinson.csv"
 DATASET_PARKINSON_PATH = HAM_VERI_DIR / "dataset_parkinson_parkinson.csv"
 MASTER_CSV_PATH = ISLENMIS_VERI_DIR / "parkinson_master.csv"
+SEANSLAR_OZET_PATH = ISLENMIS_VERI_DIR / "seanslar_ozet.csv"
 
 # Klasörlerin varlığını garanti et
 for _dir in [AYARLAR_DIR, VERILER_DIR, HAM_VERI_DIR, ISLENMIS_VERI_DIR, MODELLER_DIR, KAYNAK_KODLAR_DIR, DOKUMANLAR_DIR, BETIKLER_DIR]:

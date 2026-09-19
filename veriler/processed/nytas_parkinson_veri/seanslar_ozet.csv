@@ -1,0 +1,6 @@
+seans_no,kullanici_id,tarih_saat,sure_sn,klinik_etiket,kol_asimetri,adim_uzunlugu_cm,govde_egimi,kadans_spm,fog_skoru,yuruyus_hizi_cms,tremor_hz,kol_genlik_ort,nihai_teshis,guven_pct,klinik_risk_sayisi
+1,hasta_001,2026-05-29 00:24:29,7.4,-1,16.63,32.45,4.74,31.62,0.0,0.04,0.0,0.0,PARKINSON RİSKİ TESPİT EDİLDİ,68.0,4
+2,hasta_001,2026-05-29 00:25:51,10.1,-1,23.13,11.45,2.07,39.65,0.0,0.01,0.0,0.0,PARKINSON RİSKİ TESPİT EDİLDİ,65.6,4
+3,hasta_001,2026-05-29 00:34:16,42.7,-1,63.53,11.73,23.49,64.1,0.0,0.0,0.0,0.0,PARKINSON RİSKİ TESPİT EDİLDİ,52.5,5
+4,hasta_001,2026-05-29 00:36:56,219.3,-1,38.69,21.52,6.69,18.31,0.15,0.0,3.0,0.0,PARKINSON RİSKİ TESPİT EDİLDİ,60.9,4
+5,hasta_001,2026-05-29 00:40:49,146.7,-1,21.28,20.42,4.16,11.37,0.21,0.0,3.25,0.0,PARKINSON RİSKİ TESPİT EDİLDİ,66.2,5

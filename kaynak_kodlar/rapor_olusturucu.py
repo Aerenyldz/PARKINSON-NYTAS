@@ -195,6 +195,24 @@ def seans_verisi_yukle(seans_no: int, veri_dizini: str = DEFAULT_VERI_DIZINI) ->
         kararlilik_renk = "#16a34a"
         kararlilik_bg = "#f0fdf4"
 
+    # Klinik Ön Tanı / Etiketleme (Ground Truth)
+    klinik_etiket = -1
+    if "klinik_etiket" in df.columns and not df["klinik_etiket"].dropna().empty:
+        try:
+            klinik_etiket = int(pd.to_numeric(df["klinik_etiket"].dropna().iloc[0], errors="coerce"))
+        except Exception:
+            klinik_etiket = -1
+
+    if klinik_etiket == 1:
+        on_tani_metin = "Tanı Almış Parkinson (1)"
+        on_tani_renk = "#dc2626"
+    elif klinik_etiket == 0:
+        on_tani_metin = "Sağlıklı Kontrol (0)"
+        on_tani_renk = "#16a34a"
+    else:
+        on_tani_metin = "Bilinmiyor / Rutin Tarama"
+        on_tani_renk = "#64748b"
+
     meta = {
         "seans_no": seans_no,
         "kullanici_id": kullanici_id,
@@ -204,6 +222,9 @@ def seans_verisi_yukle(seans_no: int, veri_dizini: str = DEFAULT_VERI_DIZINI) ->
         "kararlilik_derecesi": kararlilik_derecesi,
         "kararlilik_renk": kararlilik_renk,
         "kararlilik_bg": kararlilik_bg,
+        "klinik_etiket": klinik_etiket,
+        "on_tani_metin": on_tani_metin,
+        "on_tani_renk": on_tani_renk,
         "seans_klasoru": seans_kl,
     }
 
@@ -556,7 +577,7 @@ def html_rapor_derle(meta: dict, genel_ozet: dict, biyobelirtecler: List[dict],
             border-radius: 6px;
             padding: 12px 18px;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 12px;
             margin-bottom: 18px;
         }}
@@ -742,6 +763,10 @@ def html_rapor_derle(meta: dict, genel_ozet: dict, biyobelirtecler: List[dict],
                 <span>Veri Kararlılık Düzeyi</span>
                 <strong style="color: {meta['kararlilik_renk']}; font-size: 11px;">{meta['kararlilik_derecesi']}</strong>
             </div>
+            <div class="bilgi-ogesi">
+                <span>Klinik Ön Tanı / Etiket</span>
+                <strong style="color: {meta['on_tani_renk']}; font-size: 11px;">{meta['on_tani_metin']}</strong>
+            </div>
         </div>
 
         <!-- Teşhis Özeti Kutusu -->
@@ -815,6 +840,56 @@ def html_rapor_derle(meta: dict, genel_ozet: dict, biyobelirtecler: List[dict],
     return cikti_html
 
 
+def seans_ozet_kaydet(meta: dict, biyobelirtecler: List[dict], genel_ozet: dict, veri_dizini: str = DEFAULT_VERI_DIZINI) -> str:
+    """
+    Tamamlanan seansın kararlı rejim ortalamalarını ve klinik etiketini
+    'seanslar_ozet.csv' dosyasına tekil satır olarak kaydeder/günceller.
+    Bu dosya, makine öğrenmesi modelinin binlerce gürültülü video karesi yerine
+    kararlı hasta profilleri üzerinden eğitebilmesi için 'Ground Truth' veri havuzudur.
+    """
+    ozet_csv = os.path.join(veri_dizini, "seanslar_ozet.csv")
+
+    b_map = {b["id"]: b["deger"] for b in biyobelirtecler}
+
+    yeni_satir = {
+        "seans_no": meta.get("seans_no", 0),
+        "kullanici_id": meta.get("kullanici_id", "hasta"),
+        "tarih_saat": meta.get("tarih_saat", ""),
+        "sure_sn": meta.get("sure_sn", 0.0),
+        "klinik_etiket": meta.get("klinik_etiket", -1),
+        "kol_asimetri": b_map.get("kol_asimetri_ort", 0.0),
+        "adim_uzunlugu_cm": b_map.get("adim_uzunlugu_ort", 0.0),
+        "govde_egimi": b_map.get("govde_egimi_ort", 0.0),
+        "kadans_spm": b_map.get("kadans_spm", 0.0),
+        "fog_skoru": b_map.get("fog_skoru", 0.0),
+        "yuruyus_hizi_cms": b_map.get("yuruyus_hizi_cms", 0.0),
+        "tremor_hz": b_map.get("tremor_hz_max", 0.0),
+        "kol_genlik_ort": b_map.get("kol_genlik_ort", 0.0),
+        "nihai_teshis": genel_ozet.get("nihai_teshis", ""),
+        "guven_pct": genel_ozet.get("guven_pct", 0.0),
+        "klinik_risk_sayisi": genel_ozet.get("klinik_risk_sayisi", 0),
+    }
+
+    df_yeni = pd.DataFrame([yeni_satir])
+
+    if os.path.exists(ozet_csv):
+        try:
+            df_mevcut = pd.read_csv(ozet_csv)
+            # Aynı seans_no varsa güncelle, yoksa ekle
+            if "seans_no" in df_mevcut.columns and meta.get("seans_no") in df_mevcut["seans_no"].values:
+                df_mevcut = df_mevcut[df_mevcut["seans_no"] != meta.get("seans_no")]
+            df_ozet = pd.concat([df_mevcut, df_yeni], ignore_index=True)
+        except Exception:
+            df_ozet = df_yeni
+    else:
+        df_ozet = df_yeni
+
+    os.makedirs(os.path.dirname(ozet_csv) if os.path.dirname(ozet_csv) else ".", exist_ok=True)
+    df_ozet.to_csv(ozet_csv, index=False, encoding="utf-8")
+    print(f"[BILGI] Seans #{meta.get('seans_no')} stabil profili '{ozet_csv}' dosyasına kaydedildi.")
+    return ozet_csv
+
+
 def rapor_olustur(seans_no: int, veri_dizini: str = DEFAULT_VERI_DIZINI, otomatik_ac: bool = True) -> Optional[str]:
     """
     Belirtilen seans numarası için tüm analizi yapar, grafikleri çizer,
@@ -853,6 +928,12 @@ def rapor_olustur(seans_no: int, veri_dizini: str = DEFAULT_VERI_DIZINI, otomati
     except Exception as e:
         print(f"[HATA] HTML raporu derlenemedi: {e}")
         return None
+
+    # 4. Kararlı Seans Profilini seanslar_ozet.csv'ye Kaydet
+    try:
+        seans_ozet_kaydet(meta, biyobelirtecler, genel_ozet, veri_dizini)
+    except Exception as e:
+        print(f"[UYARI] Seans özeti kaydedilemedi: {e}")
 
     # 4. Tarayıcıda Aç
     if otomatik_ac and os.path.exists(html_yolu):

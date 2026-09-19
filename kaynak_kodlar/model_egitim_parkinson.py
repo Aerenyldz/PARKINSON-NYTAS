@@ -47,28 +47,31 @@ sys.path.insert(0, str(BASE_DIR))
 
 try:
     from ayarlar.settings import (
-        PARKINSON_MODEL_PATH, DATASET_NORMAL_PATH, DATASET_PARKINSON_PATH, MASTER_CSV_PATH, RAW_DATA_DIR
+        PARKINSON_MODEL_PATH, DATASET_NORMAL_PATH, DATASET_PARKINSON_PATH, MASTER_CSV_PATH, SEANSLAR_OZET_PATH, RAW_DATA_DIR
     )
     MODEL_CIKTI = str(PARKINSON_MODEL_PATH)
     DEFAULT_NORMAL_CSV = str(DATASET_NORMAL_PATH)
     DEFAULT_PARKINSON_CSV = str(DATASET_PARKINSON_PATH)
     DEFAULT_MASTER_CSV = str(MASTER_CSV_PATH)
+    DEFAULT_OZET_CSV = str(SEANSLAR_OZET_PATH)
     DEFAULT_RAW_DIR = str(RAW_DATA_DIR)
 except Exception:
     try:
         from config.settings import (
-            PARKINSON_MODEL_PATH, DATASET_NORMAL_PATH, DATASET_PARKINSON_PATH, MASTER_CSV_PATH, RAW_DATA_DIR
+            PARKINSON_MODEL_PATH, DATASET_NORMAL_PATH, DATASET_PARKINSON_PATH, MASTER_CSV_PATH, SEANSLAR_OZET_PATH, RAW_DATA_DIR
         )
         MODEL_CIKTI = str(PARKINSON_MODEL_PATH)
         DEFAULT_NORMAL_CSV = str(DATASET_NORMAL_PATH)
         DEFAULT_PARKINSON_CSV = str(DATASET_PARKINSON_PATH)
         DEFAULT_MASTER_CSV = str(MASTER_CSV_PATH)
+        DEFAULT_OZET_CSV = str(SEANSLAR_OZET_PATH)
         DEFAULT_RAW_DIR = str(RAW_DATA_DIR)
     except Exception:
         MODEL_CIKTI = str(BASE_DIR / "modeller" / "parkinson_model.pkl")
         DEFAULT_NORMAL_CSV = str(BASE_DIR / "veriler" / "raw" / "dataset_normal_parkinson.csv")
         DEFAULT_PARKINSON_CSV = str(BASE_DIR / "veriler" / "raw" / "dataset_parkinson_parkinson.csv")
         DEFAULT_MASTER_CSV = str(BASE_DIR / "veriler" / "processed" / "nytas_parkinson_veri" / "parkinson_master.csv")
+        DEFAULT_OZET_CSV = str(BASE_DIR / "veriler" / "processed" / "nytas_parkinson_veri" / "seanslar_ozet.csv")
         DEFAULT_RAW_DIR = str(BASE_DIR / "veriler" / "raw")
 
 # =========================================================================
@@ -118,67 +121,95 @@ def verileri_yukle_csv(normal_csv: str, parkinson_csv: str) -> pd.DataFrame:
     return df
 
 
-def verileri_yukle_master(master_csv: str) -> pd.DataFrame:
-    """nytas_parkinson.py'nin topladigi parkinson_master.csv'den yukler.
-    Bu dosyada 'tahmin' sutunundan label cikarilir (kullanici isaretlemis olmali)."""
+def verileri_yukle_master(master_csv: str = DEFAULT_MASTER_CSV, ozet_csv: str = DEFAULT_OZET_CSV) -> pd.DataFrame:
+    """
+    Canlı seans verilerini yükler ve model eğitimine hazırlar.
+
+    Bilimsel & Klinik Öğrenme İlkesi:
+    - Sadece hekim tarafından 'Klinik Ön Tanı / Etiket' atanmış (0: Sağlıklı, 1: Parkinson)
+      seanslar gerçek 'Ground Truth' kabul edilir.
+    - 'Bilinmiyor / Rutin Tarama (-1)' statüsündeki kayıtlar, modelin kendi yanlış tahminlerini
+      ezberlemesini (döngüsel öğrenme) önlemek amacıyla eğitime doğrudan dahil edilmez.
+    - Eğer henüz teyitli canlı veri yoksa veya az sayıda ise, referans klinik veri seti ile
+      desteklenerek modelin kararlı kalması sağlanır.
+    """
     print("=" * 55)
-    print("  NYTAS-PARKINSON | Master CSV'den Model Egitimi")
+    print("  NYTAS-PARKINSON | Canlı Seans Verileri ile Model Eğitimi")
     print("=" * 55)
 
-    try:
-        df = pd.read_csv(master_csv)
-        print(f"  Toplam satir: {len(df)}  ({master_csv})")
-    except FileNotFoundError:
-        print(f"HATA: {master_csv} bulunamadi!")
-        sys.exit(1)
+    df_canli_temiz = None
 
-    # Gerekli sutunlarin var olup olmadigini kontrol et
-    mevcut_sutunlar = set(df.columns)
-    # Master CSV'deki sutun isimleri eslestirmesi:
-    master_mapping = {
-        "kol_asimetri_ort": "kol_asimetri",
-        "kol_asimetri":     "kol_asimetri",
-        "adim_uzunlugu_ort": "adim_uzunlugu_cm",
-        "adim_uzunlugu_cm": "adim_uzunlugu_cm",
-        "govde_egimi_ort":  "govde_egimi",
-        "govde_egimi":      "govde_egimi",
-        "kadans_spm":       "kadans_spm",
-        "fog_skoru":        "fog_skoru",
-        "yuruyus_hizi_cms": "yuruyus_hizi_cms",
-        "tremor_hz_max":    "tremor_hz",       # Bilateral en yuksek el tremoru
-        "tremor_hz_L":      "tremor_hz",
-        "kol_genlik_min":   "kol_genlik_ort",   # En cok kisitlanan taraf salinimi
-        "kol_genlik_ort":   "kol_genlik_ort",
-        "kol_genlik_L_ort": "kol_genlik_ort",
-    }
+    # 1. Öncelik: Kararlı Seans Özet Havuzunu (seanslar_ozet.csv) Kontrol Et
+    if os.path.exists(ozet_csv):
+        try:
+            df_ozet = pd.read_csv(ozet_csv)
+            if "klinik_etiket" in df_ozet.columns:
+                df_teyitli = df_ozet[df_ozet["klinik_etiket"].isin([0, 1])].copy()
+                if not df_teyitli.empty:
+                    print(f"  [BİLGİ] 'seanslar_ozet.csv' havuzunda {len(df_teyitli)} doğrulanmış klinik seans bulundu.")
+                    df_canli_temiz = pd.DataFrame()
+                    for f in PARKINSON_FEATURES:
+                        df_canli_temiz[f] = pd.to_numeric(df_teyitli.get(f, 0.0), errors="coerce").fillna(0.0)
+                    df_canli_temiz["label"] = df_teyitli["klinik_etiket"].astype(int)
+        except Exception as e:
+            print(f"  [UYARI] Seans özet dosyası okunurken hata: {e}")
 
-    # Sutunlari yeniden isimlendir
-    rename_map = {}
-    for src, dst in master_mapping.items():
-        if src in mevcut_sutunlar and src != dst:
-            rename_map[src] = dst
-    df = df.rename(columns=rename_map)
+    # 2. İkinci Öncelik: Frame Bazlı Master CSV'yi (parkinson_master.csv) Kontrol Et
+    if df_canli_temiz is None or df_canli_temiz.empty:
+        if os.path.exists(master_csv):
+            try:
+                df_master = pd.read_csv(master_csv)
+                if "klinik_etiket" in df_master.columns:
+                    if "tahmin" in df_master.columns:
+                        df_master = df_master[~df_master["tahmin"].str.contains("Toplaniyor", na=False, case=False)]
+                    df_teyitli = df_master[df_master["klinik_etiket"].isin([0, 1])].copy()
+                    if not df_teyitli.empty:
+                        print(f"  [BİLGİ] 'parkinson_master.csv' içinde {len(df_teyitli)} doğrulanmış kare bulundu.")
+                        df_canli_temiz = pd.DataFrame()
+                        df_canli_temiz["kol_asimetri"] = pd.to_numeric(df_teyitli.get("kol_asimetri_ort", df_teyitli.get("kol_asimetri", 0.0)), errors="coerce")
+                        df_canli_temiz["adim_uzunlugu_cm"] = pd.to_numeric(df_teyitli.get("adim_uzunlugu_ort", df_teyitli.get("adim_uzunlugu_cm", 0.0)), errors="coerce")
+                        df_canli_temiz["govde_egimi"] = pd.to_numeric(df_teyitli.get("govde_egimi_ort", df_teyitli.get("govde_egimi", 0.0)), errors="coerce")
+                        df_canli_temiz["kadans_spm"] = pd.to_numeric(df_teyitli.get("kadans_spm", 0.0), errors="coerce")
+                        df_canli_temiz["fog_skoru"] = pd.to_numeric(df_teyitli.get("fog_skoru", 0.0), errors="coerce")
+                        df_canli_temiz["yuruyus_hizi_cms"] = pd.to_numeric(df_teyitli.get("yuruyus_hizi_cms", 0.0), errors="coerce")
+                        df_canli_temiz["tremor_hz"] = pd.to_numeric(df_teyitli.get("tremor_hz_max", df_teyitli.get("tremor_hz_L", 0.0)), errors="coerce")
+                        df_canli_temiz["kol_genlik_ort"] = pd.to_numeric(df_teyitli.get("kol_genlik_min", df_teyitli.get("kol_genlik_ort", 0.0)), errors="coerce")
+                        df_canli_temiz["label"] = df_teyitli["klinik_etiket"].astype(int)
+            except Exception as e:
+                print(f"  [UYARI] Master CSV okunurken hata: {e}")
 
-    # label olustur: Eger 'label' sutunu yoksa, kullanici 'tahmin' sutunundan cikart
-    if "label" not in df.columns:
-        if "tahmin" in df.columns:
-            print("  'label' sutunu yok, 'tahmin' sutunundan olusturuluyor...")
-            df["label"] = df["tahmin"].apply(
-                lambda x: 1 if "PARKINSON" in str(x).upper() or "RISK" in str(x).upper() else 0
-            )
-        else:
-            print("HATA: CSV'de ne 'label' ne de 'tahmin' sutunu var!")
-            sys.exit(1)
+    # 3. Sonuç Değerlendirme & Hibrit Birleştirme (Klinik Güvenlik)
+    if df_canli_temiz is None or df_canli_temiz.empty:
+        print("\n" + "!" * 55)
+        print("  [KLİNİK BİLGİLENDİRME]")
+        print("  Canlı seanslarda hekim tarafından doğrulanmış etiket (0 veya 1) bulunamadı!")
+        print("  Mevcut seanslar 'Bilinmiyor / Rutin Tarama (-1)' statüsündedir.")
+        print("  Modelin kendi tahminlerini ezberlemesini (döngüsel öğrenme hatası)")
+        print("  önlemek için referans klinik veri seti (dataset_normal + dataset_parkinson)")
+        print("  kullanılarak temel model güncelleniyor.")
+        print("  (İpucu: Yeni test başlatırken 'Klinik Durum' seçeneğinden hastanın tanısını")
+        print("  seçerek modele gerçek klinik tecrübe kazandırabilirsiniz.)")
+        print("!" * 55 + "\n")
+        return verileri_yukle_csv(DEFAULT_NORMAL_CSV, DEFAULT_PARKINSON_CSV)
 
-    # NaN temizligi
-    for col in PARKINSON_FEATURES:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-    df = df.dropna(subset=[c for c in PARKINSON_FEATURES if c in df.columns])
+    # NaN temizliği
+    df_canli_temiz = df_canli_temiz.dropna(subset=PARKINSON_FEATURES)
 
-    print(f"  Temizlenmis satir: {len(df)}")
-    print(f"  Label dagilimi:\n{df['label'].value_counts().to_string()}")
-    return df
+    # Eğer canlı veride sadece tek sınıf varsa veya örnek sayısı az ise,
+    # modelin çökmemesi ve genel geçerliliğini koruması için referans veriyle takviye et
+    siniflar = df_canli_temiz["label"].unique()
+    if len(siniflar) < 2 or len(df_canli_temiz) < 50:
+        print(f"  [GÜVENCE] Canlı veri ({len(df_canli_temiz)} örnek, sınıflar: {siniflar.tolist()}) referans veri setiyle harmanlanıyor...")
+        df_ref = verileri_yukle_csv(DEFAULT_NORMAL_CSV, DEFAULT_PARKINSON_CSV)
+        df_final = pd.concat([df_ref, df_canli_temiz], ignore_index=True)
+        df_final = df_final.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+    else:
+        print(f"  [BAŞARILI] {len(df_canli_temiz)} adet doğrulanmış canlı veriyle bağımsız eğitim yapılıyor.")
+        df_final = df_canli_temiz.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+
+    print(f"  Toplam Eğitim Örneği: {len(df_final)}")
+    print(f"  Sınıf Dağılımı:\n{df_final['label'].value_counts().to_string()}")
+    return df_final
 
 
 # =========================================================================
@@ -413,7 +444,7 @@ if __name__ == "__main__":
         df = sentetik_veri_uret()
     elif "--master-csv" in sys.argv:
         # nytas_parkinson.py'nin topladigi verilerden egit
-        df = verileri_yukle_master(DEFAULT_MASTER_CSV)
+        df = verileri_yukle_master(DEFAULT_MASTER_CSV, DEFAULT_OZET_CSV)
     else:
         # Manuel olusturulmus CSV dosyalarindan egit (varsayilan)
         df = verileri_yukle_csv(DEFAULT_NORMAL_CSV, DEFAULT_PARKINSON_CSV)
