@@ -76,10 +76,27 @@ class NYTASGui(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("NYTAS-PARKINSON™ v1.2 — Yürüyüş Analiz & Yapay Zeka Platformu")
-        self.geometry("980x720")
-        self.minsize(920, 650)
+        self.title("NYTAS-PARKINSON™ v1.3 — Yürüyüş Analiz & Yapay Zeka Platformu")
+
+        # Ekran boyutuna göre dinamik geometri
+        try:
+            sw = self.winfo_screenwidth()
+            sh = self.winfo_screenheight()
+            init_w = min(1180, max(1000, int(sw * 0.90)))
+            init_h = min(860, max(720, int(sh * 0.88)))
+            self.geometry(f"{init_w}x{init_h}")
+        except Exception:
+            self.geometry("1060x800")
+
+        self.minsize(920, 600)
         self.configure(bg=self.C_BG)
+
+        # Windows'ta tam ekran / maksimize olarak başlat (tüm sayfa otomatik sığsın)
+        if os.name == 'nt':
+            try:
+                self.state('zoomed')
+            except Exception:
+                pass
 
         self._stil_yapilandir()
         self._ust_banner_olustur()
@@ -113,8 +130,8 @@ class NYTASGui(tk.Tk):
         style.configure("Vertical.TScrollbar", background="#1e293b", troughcolor="#0f172a", borderwidth=0)
 
     def _ust_banner_olustur(self):
-        banner = tk.Frame(self, bg="#1e293b", padx=22, pady=14, highlightthickness=1, highlightbackground="#334155")
-        banner.pack(fill="x", side="top", padx=12, pady=(10, 5))
+        banner = tk.Frame(self, bg="#1e293b", padx=20, pady=10, highlightthickness=1, highlightbackground="#334155")
+        banner.pack(fill="x", side="top", padx=12, pady=(6, 4))
 
         ust_satir = tk.Frame(banner, bg="#1e293b")
         ust_satir.pack(fill="x")
@@ -154,8 +171,8 @@ class NYTASGui(tk.Tk):
         self.lbl_rozet_ml.pack(side="left", padx=4)
 
         # Açıklama Metni Kutusu
-        aciklama_kutu = tk.Frame(banner, bg="#0f172a", padx=12, pady=7, highlightthickness=1, highlightbackground="#334155")
-        aciklama_kutu.pack(fill="x", pady=(10, 0))
+        aciklama_kutu = tk.Frame(banner, bg="#0f172a", padx=12, pady=6, highlightthickness=1, highlightbackground="#334155")
+        aciklama_kutu.pack(fill="x", pady=(6, 0))
 
         aciklama_metni = (
             "Hoş geldiniz! NYTAS-PARKINSON, kamera tabanlı yapay zeka (BlazePose 33 Landmark) ile "
@@ -198,21 +215,46 @@ class NYTASGui(tk.Tk):
         self._olustur_sekme_bilgi()
 
     def _olustur_sekme_analiz(self):
-        # Temiz ve Profesyonel Tek Kart Düzeni
-        ana_panel = tk.Frame(self.tab_analiz, bg=self.C_BG)
-        ana_panel.pack(fill="both", expand=True)
+        # Dikey Kaydırılabilir Canvas Sistemi (Her çözünürlükte tüm sayfa görünür & kaydırılabilir)
+        canvas = tk.Canvas(self.tab_analiz, bg=self.C_BG, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.tab_analiz, orient="vertical", command=canvas.yview)
 
-        kart = tk.Frame(ana_panel, bg=self.C_CARD, padx=24, pady=20, highlightthickness=1, highlightbackground=self.C_CARD_LIGHT)
-        kart.pack(fill="both", expand=True)
+        scrollable_frame = tk.Frame(canvas, bg=self.C_BG)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        def _on_canvas_configure(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Fare tekerleği desteği
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Ana Kart Düzeni
+        kart = tk.Frame(scrollable_frame, bg=self.C_CARD, padx=20, pady=16, highlightthickness=1, highlightbackground=self.C_CARD_LIGHT)
+        kart.pack(fill="both", expand=True, padx=2, pady=2)
 
         lbl_baslik = tk.Label(
             kart,
             text="🎥 Canlı Yürüyüş Analizi & Klinik Seans Modülü",
-            font=("Segoe UI", 13, "bold"),
+            font=("Segoe UI", 12, "bold"),
             fg=self.C_CYAN,
             bg=self.C_CARD
         )
-        lbl_baslik.pack(anchor="w", pady=(0, 10))
+        lbl_baslik.pack(anchor="w", pady=(0, 6))
 
         aciklama = (
             "Bu modül, MediaPipe Pose Landmarker yapay zeka motorunu ve önceden eğitilmiş makine öğrenmesi modelini kullanarak "
@@ -225,22 +267,20 @@ class NYTASGui(tk.Tk):
             font=("Segoe UI", 9),
             fg="#cbd5e1",
             bg=self.C_CARD,
-            wraplength=860,
+            wraplength=900,
             justify="left"
         )
-        lbl_aciklama.pack(anchor="w", pady=(0, 14))
+        lbl_aciklama.pack(anchor="w", pady=(0, 10))
 
         # Yönergeler Kutusu
-        yonerge_kutu = tk.Frame(kart, bg="#0f172a", padx=16, pady=12, highlightthickness=1, highlightbackground="#334155")
-        yonerge_kutu.pack(fill="x", pady=(0, 18))
+        yonerge_kutu = tk.Frame(kart, bg="#0f172a", padx=14, pady=8, highlightthickness=1, highlightbackground="#334155")
+        yonerge_kutu.pack(fill="x", pady=(0, 12))
 
         yonege_metin = (
             "📌 TEST & ÖLÇÜM YÖNERGELERİ:\n"
-            "1. 'Analizi Başlat' butonuna bastığınızda hasta bilgisi ve kamera seçim penceresi açılacaktır.\n"
-            "2. Dahili web kamerası (0), harici USB kamera (1), IP kamera veya kayıtlı test videosu (.mp4) seçebilirsiniz.\n"
-            "3. Hastanın baştan ayağa tam boy göründüğünden ve kollarını serbest bıraktığından emin olun.\n"
-            "4. Güvenilir ML değerlendirmesi için en az 30 saniye yürüyüş yapılması önerilir.\n"
-            "5. Analizi tamamlayıp kaydetmek için video ekranında 'Q' tuşuna basınız."
+            "1. 'Canlı Analiz Başlat' butonuna bastığınızda hasta bilgisi ve kamera seçim penceresi açılır (webcam 0, USB cam 1 veya IP url).\n"
+            "2. Hastanın baştan ayağa tam boy göründüğünden ve kollarını serbest bıraktığından emin olun (en az 30 saniye önerilir).\n"
+            "3. Analizi tamamlayıp kaydetmek ve klinik raporu otomatik açmak için video ekranında 'Q' tuşuna basınız."
         )
         lbl_yonerge = tk.Label(
             yonerge_kutu,
@@ -256,17 +296,17 @@ class NYTASGui(tk.Tk):
         btn_baslat = tk.Button(
             kart,
             text="▶  CANLI ANALİZ VE SEANS GİRİŞİNİ BAŞLAT",
-            font=("Segoe UI", 12, "bold"),
+            font=("Segoe UI", 11, "bold"),
             bg="#0284c7",
             fg="#ffffff",
             activebackground="#0369a1",
             activeforeground="#ffffff",
             relief="flat",
             cursor="hand2",
-            pady=12,
+            pady=10,
             command=self._analizi_baslat
         )
-        btn_baslat.pack(fill="x", pady=(0, 8))
+        btn_baslat.pack(fill="x", pady=(0, 6))
 
         # En Son Seans Raporu Butonu
         btn_rapor = tk.Button(
@@ -279,10 +319,95 @@ class NYTASGui(tk.Tk):
             activeforeground="#ffffff",
             relief="flat",
             cursor="hand2",
-            pady=9,
+            pady=8,
             command=self._son_raporu_ac
         )
         btn_rapor.pack(fill="x", pady=(0, 10))
+
+        # Ayırıcı çizgi
+        sep = tk.Frame(kart, bg="#334155", height=1)
+        sep.pack(fill="x", pady=(2, 8))
+
+        lbl_gelismis = tk.Label(
+            kart,
+            text="⚡ GELİŞMİŞ ANALİZ ARAÇLARI (VİDEO ANALİZİ & İKİ FAZLI TEST)",
+            font=("Segoe UI", 9, "bold"),
+            fg=self.C_CYAN,
+            bg=self.C_CARD
+        )
+        lbl_gelismis.pack(anchor="w", pady=(0, 6))
+
+        # 2 Sütunlu Panel (Yan yana modern kartlar)
+        ikili_panel = tk.Frame(kart, bg=self.C_CARD)
+        ikili_panel.pack(fill="x", pady=(0, 4))
+        ikili_panel.columnconfigure(0, weight=1)
+        ikili_panel.columnconfigure(1, weight=1)
+
+        # Sol Kolon: Video Analiz Kartı
+        kart_video = tk.Frame(ikili_panel, bg="#0f172a", padx=12, pady=10, highlightthickness=1, highlightbackground="#334155")
+        kart_video.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+
+        btn_video = tk.Button(
+            kart_video,
+            text="🎞  VİDEO DOSYASINDAN ANALİZ & RAPORLAMA",
+            font=("Segoe UI", 10, "bold"),
+            bg="#b45309",
+            fg="#ffffff",
+            activebackground="#92400e",
+            activeforeground="#ffffff",
+            relief="flat",
+            cursor="hand2",
+            pady=8,
+            command=self._video_analiz_baslat
+        )
+        btn_video.pack(fill="x", pady=(0, 6))
+
+        lbl_video_aciklama = tk.Label(
+            kart_video,
+            text=(
+                "Örnek hasta yürüyüş videosunu (.mp4/.avi/.mov/.mkv) seçerek tek tıkla "
+                "BlazePose analizi yapıp medikal HTML klinik raporu üretin."
+            ),
+            font=("Segoe UI", 8),
+            fg="#94a3b8",
+            bg="#0f172a",
+            wraplength=410,
+            justify="left"
+        )
+        lbl_video_aciklama.pack(fill="x")
+
+        # Sağ Kolon: İki Fazlı Klinik Seans Kartı
+        kart_iki_faz = tk.Frame(ikili_panel, bg="#0f172a", padx=12, pady=10, highlightthickness=1, highlightbackground="#334155")
+        kart_iki_faz.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+
+        btn_iki_faz = tk.Button(
+            kart_iki_faz,
+            text="🔬  İKİ FAZLI OTOMATİK KLİNİK SEANS",
+            font=("Segoe UI", 10, "bold"),
+            bg="#7c3aed",
+            fg="#ffffff",
+            activebackground="#6d28d9",
+            activeforeground="#ffffff",
+            relief="flat",
+            cursor="hand2",
+            pady=8,
+            command=self._iki_fazli_seans_baslat
+        )
+        btn_iki_faz.pack(fill="x", pady=(0, 6))
+
+        lbl_iki_faz_aciklama = tk.Label(
+            kart_iki_faz,
+            text=(
+                "Faz 1 (İstirahat Tremor, 45s) ➔ Faz 2 (Yürüyüş Analizi, 60s) yönergeli akış. "
+                "Otomatik geçiş, SPACE ile faz atlama ve seans sonu otomatik rapor."
+            ),
+            font=("Segoe UI", 8),
+            fg="#94a3b8",
+            bg="#0f172a",
+            wraplength=410,
+            justify="left"
+        )
+        lbl_iki_faz_aciklama.pack(fill="x")
 
     def _analizi_baslat(self):
         py_cmd = python_executable()
@@ -325,6 +450,99 @@ class NYTASGui(tk.Tk):
                 messagebox.showwarning("Uyarı", f"Seans #{s_no} için işlenebilir veri bulunamadı.")
         except Exception as e:
             messagebox.showerror("Hata", f"Rapor oluşturulurken hata: {e}")
+
+    def _video_analiz_baslat(self):
+        """Seçilen video dosyasını analiz modülüyle işler ve HTML raporu üretir."""
+        from tkinter import filedialog
+        dosya = filedialog.askopenfilename(
+            title="Analiz Edilecek Yürüyüş Videosu Seçin",
+            filetypes=[
+                ("Video Dosyaları", "*.mp4 *.avi *.mov *.mkv *.MP4 *.AVI"),
+                ("Tüm Dosyalar", "*.*")
+            ]
+        )
+        if not dosya:
+            return
+
+        # Hasta bilgisi isteme diyaloğu
+        bilgi_win = tk.Toplevel(self)
+        bilgi_win.title("Video Analizi — Hasta Bilgileri")
+        bilgi_win.geometry("400x300")
+        bilgi_win.configure(bg="#0f172a")
+        bilgi_win.grab_set()
+        bilgi_win.resizable(False, False)
+
+        tk.Label(bilgi_win, text="🎞 Video Analizi Hasta Bilgileri",
+                 font=("Segoe UI", 11, "bold"), fg="#38bdf8", bg="#0f172a").pack(pady=(16, 4))
+        tk.Label(bilgi_win, text=f"📁 {Path(dosya).name}",
+                 font=("Segoe UI", 8), fg="#94a3b8", bg="#0f172a").pack(pady=(0, 10))
+
+        frm = tk.Frame(bilgi_win, bg="#1e293b", padx=16, pady=12)
+        frm.pack(padx=16, fill="x")
+
+        tk.Label(frm, text="Hasta ID:", font=("Segoe UI", 9), bg="#1e293b", fg="#e2e8f0").grid(
+            row=0, column=0, sticky="w", pady=5)
+        id_ent = tk.Entry(frm, font=("Segoe UI", 9), width=20,
+                          bg="#0f172a", fg="#f1f5f9", insertbackground="white")
+        id_ent.insert(0, "video_hasta_001")
+        id_ent.grid(row=0, column=1, pady=5, padx=8)
+
+        tk.Label(frm, text="Boy (cm):", font=("Segoe UI", 9), bg="#1e293b", fg="#e2e8f0").grid(
+            row=1, column=0, sticky="w", pady=5)
+        boy_ent = tk.Entry(frm, font=("Segoe UI", 9), width=20,
+                           bg="#0f172a", fg="#f1f5f9", insertbackground="white")
+        boy_ent.insert(0, "175.0")
+        boy_ent.grid(row=1, column=1, pady=5, padx=8)
+
+        def basla():
+            k_id  = id_ent.get().strip() or "video_hasta_001"
+            k_boy = boy_ent.get().strip()
+            try:
+                boy_f = float(k_boy)
+                if boy_f < 50 or boy_f > 250:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Hata", "Geçerli bir boy girin (50–250 cm)!", parent=bilgi_win)
+                return
+
+            bilgi_win.destroy()
+            py_cmd = python_executable()
+            cmd = [
+                py_cmd,
+                str(BASE_DIR / "kaynak_kodlar" / "nytas_parkinson.py"),
+                "--direct",
+                "--id",     k_id,
+                "--boy",    str(boy_f),
+                "--kamera", dosya,
+            ]
+            try:
+                self._alt_durum_mesaj(f"Video Analizi Başlatıldı: {Path(dosya).name}")
+                subprocess.Popen(cmd)
+            except Exception as exc:
+                messagebox.showerror("Hata", f"Video analiz modülü başlatılamadı:\n{exc}")
+
+        tk.Button(bilgi_win, text="▶  Video Analizini Başlat",
+                  font=("Segoe UI", 10, "bold"), bg="#b45309", fg="white",
+                  relief="flat", cursor="hand2", pady=8,
+                  command=basla).pack(fill="x", padx=16, pady=(14, 4))
+        tk.Button(bilgi_win, text="İptal",
+                  font=("Segoe UI", 9), bg="#334155", fg="white",
+                  relief="flat", cursor="hand2",
+                  command=bilgi_win.destroy).pack(fill="x", padx=16, pady=(0, 10))
+
+    def _iki_fazli_seans_baslat(self):
+        """İki fazlı klinik seans modülünü ayrı process olarak başlatır."""
+        py_cmd = python_executable()
+        cmd = [py_cmd, str(BASE_DIR / "kaynak_kodlar" / "iki_fazli_seans.py"), "--gui"]
+        try:
+            self._alt_durum_mesaj("İki Fazlı Klinik Seans Yapılandırma Penceresi Açılıyor...")
+            subprocess.Popen(cmd)
+        except Exception as e:
+            messagebox.showerror("Başlatma Hatası",
+                                 f"İki Fazlı Seans modülü başlatılamadı:\n{e}\n\n"
+                                 "Lütfen kaynak_kodlar/iki_fazli_seans.py dosyasının mevcut olduğundan emin olun.")
+
+
 
     def _olustur_sekme_egitim(self):
         ust_panel = tk.Frame(self.tab_egitim, bg=self.C_BG)
