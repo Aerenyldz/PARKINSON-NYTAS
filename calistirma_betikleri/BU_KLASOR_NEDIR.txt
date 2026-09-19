@@ -3,4 +3,5 @@ BU KLASÖR HAKKINDA: ÇALIŞTIRMA BETİKLERİ (Eski adıyla "scripts")
 Bu klasörde programı çalıştırmak ve yönetmek için çift tıklanabilen kısayol dosyaları (.bat) bulunur:
 1. run_nytas.bat    -> Canlı yürüyüş analizi kamerasını doğrudan başlatır.
 2. train_model.bat  -> Yapay zeka modelini yeniden eğitir.
-3. setup_env.bat    -> Gerekli ortamı ve kütüphaneleri otomatik kurar.
+3. setup_env.bat     -> Gerekli ortamı ve kütüphaneleri otomatik kurar.
+4. githuba_yukle.bat -> Projeyi tek tıkla GitHub deponuza yükler ve senkronize eder.

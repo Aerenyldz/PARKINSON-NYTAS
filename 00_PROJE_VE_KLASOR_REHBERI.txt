@@ -10,7 +10,8 @@ Türkçe olarak düzenlenmiş ve aşağıda özetlenmiştir:
    • Programı tek tıkla çalıştırmanızı sağlayan .bat dosyaları buradadır.
    • 'run_nytas.bat'   -> Canlı yürüyüş analizi kamerasını doğrudan açar.
    • 'train_model.bat' -> Makine öğrenmesi modelini yeniden eğitir.
-   • 'setup_env.bat'   -> Gerekli Python kütüphanelerini otomatik kurar.
+   • 'setup_env.bat'      -> Gerekli Python kütüphanelerini otomatik kurar.
+   • 'githuba_yukle.bat'  -> Projeyi GitHub deponuza tek tıkla yükler ve günceller.
 
 📁 2. dokumanlar/ (Eski adı: docs)
    • TÜBİTAK 1002 proje başvuru formu, proje metinleri ve akademik dokümanlar buradadır.
