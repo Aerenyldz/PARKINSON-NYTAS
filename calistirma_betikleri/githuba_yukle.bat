@@ -1,89 +1,107 @@
 @echo off
-chcp 65001 >nul
-title NYTAS-PARKINSON - GitHub'a Yükleme Aracı
+setlocal
+cd /d "%~dp0\.."
+
+title NYTAS-PARKINSON - GitHub Yukleme Araci
 color 0B
 
 echo =========================================================================
-echo             NYTAS-PARKINSON — GITHUB YÜKLEME VE SENKRONİZASYON
+echo             NYTAS-PARKINSON - GITHUB YUKLEME ARACI
 echo =========================================================================
 echo.
 
-cd /d "%~dp0\.."
-
-REM Git kurulu mu kontrol et
+REM 1. Git kurulu mu?
 git --version >nul 2>&1
-if %errorlevel% neq 0 (
-    color 0C
-    echo [HATA] Sisteminizde Git kurulu bulunamadi!
-    echo Lutfen https://git-scm.com adresinden Git indirip kurunuz.
-    echo.
-    pause
-    exit /b 1
-)
+if %errorlevel% neq 0 goto :HATA_GIT
 
-REM Git reposu baslatilmis mi kontrol et
+REM 2. Git repo kontrolu
 if not exist ".git" (
     echo [*] Git deposu baslatiliyor...
     git init
     git branch -M main
 )
 
-REM Uzak depo (remote origin) var mi kontrol et
+REM 3. Uzak depo kontrolu
 git remote get-url origin >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo [DIKKAT] Henuz bir GitHub uzak depo (remote origin) baglanmamis!
-    echo.
-    echo Lutfen GitHub'da actiginiz reponun URL adresini giriniz:
-    echo (Ornek: https://github.com/KULLANICI_ADINIZ/PARKINSON-NYTAS.git)
-    echo.
-    set /p REPO_URL="GitHub Repo URL: "
-    if "%REPO_URL%"=="" (
-        echo [HATA] Gecerli bir URL girmediniz. Islem iptal edildi.
-        pause
-        exit /b 1
-    )
-    git remote add origin %REPO_URL%
-    git branch -M main
-    echo [*] Uzak depo baglandi: %REPO_URL%
-) else (
-    for /f "tokens=*" %%i in ('git remote get-url origin') do set MEVCUT_URL=%%i
-    echo [*] Bagli GitHub Deposu: %MEVCUT_URL%
-)
+if %errorlevel% equ 0 goto :REMOTE_VAR
 
+:REMOTE_YOK
+echo [*] Henuz bagli bir GitHub deposu bulunamadi.
 echo.
-echo [*] Dosyalar hazirlaniyor (git add)...
+echo Lutfen GitHub'da olusturdugunuz deponun URL adresini yapistirin:
+echo Ornek: https://github.com/kullanici_adiniz/PARKINSON-NYTAS.git
+echo.
+set "REPO_URL="
+set /p REPO_URL="Depo URL adresi: "
+
+if "%REPO_URL%"=="" goto :HATA_URL
+
+git remote add origin %REPO_URL%
+git branch -M main
+echo [*] Uzak depo basariyla baglandi.
+goto :COMMIT_VE_PUSH
+
+:REMOTE_VAR
+for /f "tokens=*" %%a in ('git remote get-url origin') do set "MEVCUT_URL=%%a"
+echo [*] Bagli GitHub Deposu: %MEVCUT_URL%
+echo.
+
+:COMMIT_VE_PUSH
+echo [*] Dosyalar hazirlaniyor...
 git add .
 
-echo.
-set /p COMMIT_MSG="Commit Mesaji (Bos birakirsaniz varsayilan kullanilir): "
-if "%COMMIT_MSG%"=="" (
-    set COMMIT_MSG=NYTAS-PARKINSON v1.3: Klinik Raporlama ve Biyomekanik Iyilestirmeler
-)
+set "COMMIT_MSG="
+set /p COMMIT_MSG="Commit Mesaji (Enter'a basarsaniz otomatik mesaj kullanilir): "
+if "%COMMIT_MSG%"=="" set COMMIT_MSG=NYTAS-PARKINSON v1.3: Klinik Raporlama ve Biyomekanik Iyilestirmeler
 
-echo.
-echo [*] Degisiklikler kaydediliyor (git commit)...
 git commit -m "%COMMIT_MSG%"
 
 echo.
-echo [*] GitHub'a yukleniyor (git push -u origin main)...
-git push -u origin main
-
-if %errorlevel% equ 0 (
-    color 0A
-    echo.
-    echo =========================================================================
-    echo [BASARILI] Projeniz GitHub'a basariyla yuklendi!
-    echo =========================================================================
-) else (
-    color 0E
-    echo.
-    echo [NOT] Eger ilk push sirasinda hata aldiysaniz:
-    echo 1. GitHub kullanici adi / Personal Access Token veya SSH anahtarinizi kontrol edin.
-    echo 2. Eger repoda README onceden olustuysa, su komutu calistirin:
-    echo    git pull origin main --rebase
-    echo    git push -u origin main
-)
-
+echo [*] GitHub'a gonderiliyor (git push -u origin main)...
 echo.
-pause
+git push -u origin main
+if %errorlevel% equ 0 goto :BASARILI
+
+goto :HATA_PUSH
+
+:BASARILI
+color 0A
+echo.
+echo =========================================================================
+echo [TEBRIKLER] Projeniz GitHub'a basariyla yuklendi!
+echo =========================================================================
+echo.
+goto :SON
+
+:HATA_GIT
+color 0C
+echo [HATA] Sisteminizde Git kurulu bulunamadi!
+echo Lutfen https://git-scm.com adresinden Git indirip kurunuz.
+echo.
+goto :SON
+
+:HATA_URL
+color 0C
+echo [HATA] URL girmediniz. Islem iptal edildi.
+echo.
+goto :SON
+
+:HATA_PUSH
+color 0E
+echo.
+echo =========================================================================
+echo [UYARI] Push islemi tamamlanamadi!
+echo =========================================================================
+echo Olasi Nedenler ve Cozumler:
+echo 1. GitHub hesabinizla oturum acmaniz istenebilir (Tarayicida acilan onay ekranini tamamlayin).
+echo 2. Eger GitHub'da depo olustururken README veya License eklediyseniz:
+echo    Konsolda su komutlari calistirin:
+echo      git pull origin main --allow-unrelated-histories
+echo      git push -u origin main
+echo =========================================================================
+echo.
+goto :SON
+
+:SON
+echo Devam etmek icin bir tusa basiniz...
+pause >nul
