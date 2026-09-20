@@ -19,6 +19,9 @@
 | **Klinik Etiketleme (Ground Truth)** | Hekim tarafından doğrulanmış ön tanı etiketlemesi (`0: Sağlıklı`, `1: Parkinson`) eklendi. |
 | **Kararlı Seans Havuzu** | Binlerce gürültülü video karesi yerine seans başına 1 satırlık stabil medikal profil (`seanslar_ozet.csv`) oluşturuluyor. |
 | **Otomatik Medikal Raporlama** | Test bitiminde tek tıkla yazdırılabilir A4 medikal HTML/PDF raporu ve biyobelirteç radar analizi üretiliyor. |
+| **Video Dosyasından Analiz** | Kayıtlı hasta yürüyüş videolarından (.mp4, .avi, .mov, .mkv) doğrudan BlazePose analizi ve anında klinik rapor üretimi eklendi. |
+| **İki Fazlı Klinik Seans Akışı** | Hekim ve hasta için tam yönergeli test motoru: Faz 1 (İstirahat Tremor, 45s) ➔ Faz 2 (Yürüyüş Analizi, 60s), otomatik geçiş ve seans sonu rapor. |
+| **Duyarlı & Kaydırılabilir Arayüz** | Otomatik tam ekran (maximize) başlatma, fare tekerleği destekli dikey kaydırma (Canvas Scrollbar) ve 2 sütunlu kompakt araç kartları eklendi. |
 
 ---
 
@@ -79,6 +82,7 @@ PARKİNSON-NYTAS/
 │
 ├── kaynak_kodlar/               # Kaynak Kodlar (Eski: src)
 │   ├── nytas_parkinson.py       # Canlı Yürüyüş Analizi & GUI / Kamera Modülü
+│   ├── iki_fazli_seans.py       # İki Fazlı (İstirahat Tremor ➔ Yürüyüş) Test Motoru
 │   ├── model_egitim_parkinson.py# ML Modeli Eğitim ve Değerlendirme Betiği
 │   └── rapor_olusturucu.py      # Otomatik Medikal HTML/PDF Klinik Rapor Motoru
 │
